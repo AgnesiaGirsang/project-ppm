@@ -1,0 +1,252 @@
+/* ===== Wizard card ===== */
+.wizard-card {
+    padding-bottom: 24px;
+}
+
+/* ===== Stepper (mengikuti markup _stepper.blade.php) ===== */
+.stepper .step .circle {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--line);
+    color: var(--ink-500);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 11.5px;
+    flex-shrink: 0;
+}
+
+.stepper .step .label {
+    font-size: 11.5px;
+    font-weight: 700;
+    color: var(--ink-500);
+    white-space: nowrap;
+}
+
+.stepper .step.done .circle {
+    background: var(--green-700);
+    color: #fff;
+}
+
+.stepper .step.active .circle {
+    background: var(--green-800);
+    color: #fff;
+    box-shadow: 0 0 0 4px var(--green-100);
+}
+
+.stepper .step.active .label,
+.stepper .step.done .label {
+    color: var(--ink-900);
+}
+
+.stepper .line {
+    width: 26px;
+    height: 1.5px;
+    background: var(--line);
+    margin: 0 6px;
+}
+
+.stepper .line.done {
+    background: var(--green-700);
+}
+
+/* ===== Step 1: pilihan jenis/jalur bergaya radio card ===== */
+.radio-card-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 6px;
+}
+
+@media(max-width:900px) {
+    .radio-card-group {
+        grid-template-columns: 1fr;
+    }
+}
+
+.radio-card {
+    position: relative;
+    border: 1.5px solid var(--line);
+    border-radius: 12px;
+    padding: 14px 16px;
+    cursor: pointer;
+    background: #fff;
+    transition: .12s;
+}
+
+.radio-card:hover {
+    border-color: var(--green-500);
+}
+
+.radio-card.selected {
+    border-color: var(--green-700);
+    background: var(--green-50);
+    box-shadow: 0 0 0 3px var(--green-100);
+}
+
+.radio-card input[type=radio] {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    accent-color: var(--green-700);
+    width: 16px;
+    height: 16px;
+}
+
+.radio-card b {
+    display: block;
+    font-size: 13.5px;
+    margin-bottom: 4px;
+    padding-right: 24px;
+}
+
+.radio-card span {
+    font-size: 11.5px;
+    color: var(--ink-500);
+    line-height: 1.5;
+}
+
+/* ===== Step 2: daftar checklist anggota tim ===== */
+.check-list {
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    max-height: 280px;
+    overflow-y: auto;
+}
+
+.check-list label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--line);
+    cursor: pointer;
+    font-size: 12.5px;
+}
+
+.check-list label:last-child {
+    border-bottom: none;
+}
+
+.check-list label:hover {
+    background: var(--green-50);
+}
+
+.check-list input[type=checkbox] {
+    accent-color: var(--green-700);
+    width: 15px;
+    height: 15px;
+    flex-shrink: 0;
+}
+
+.av {
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
+    background: var(--green-700);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 11.5px;
+    flex-shrink: 0;
+}
+
+/* ===== Step 3: upload proposal ===== */
+.dropzone {
+    background: var(--green-50);
+    border: 1.5px dashed var(--green-500);
+    border-radius: 12px;
+    padding: 26px;
+    text-align: center;
+    cursor: pointer;
+    transition: .12s;
+}
+
+.dropzone:hover {
+    background: var(--green-100);
+}
+
+.dropzone .ic {
+    font-size: 26px;
+    margin-bottom: 8px;
+}
+
+.dropzone b {
+    display: block;
+    font-size: 12.5px;
+    margin-bottom: 4px;
+}
+
+.dropzone span {
+    font-size: 11px;
+    color: var(--ink-500);
+}
+
+.file-chip {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    background: var(--green-50);
+    border-radius: 9px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-top: 10px;
+}
+
+/* ===== Step 4: tag wajib pada luaran ===== */
+.tag-wajib {
+    font-size: 9.5px;
+    font-weight: 800;
+    background: var(--red-bg);
+    color: var(--red);
+    padding: 2px 7px;
+    border-radius: 999px;
+    margin-right: 6px;
+}
+
+/* ===== Step 5: review pengajuan ===== */
+.review-section {
+    margin-bottom: 18px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--line);
+}
+
+.review-section:last-of-type {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.review-section h4 {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--ink-500);
+    font-weight: 800;
+    margin-bottom: 10px;
+}
+
+.review-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 6px 0;
+    font-size: 12.5px;
+}
+
+.review-row .k {
+    color: var(--ink-500);
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.review-row .v {
+    color: var(--ink-900);
+    font-weight: 700;
+    text-align: right;
+}
