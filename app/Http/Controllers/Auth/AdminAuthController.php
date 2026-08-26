@@ -21,18 +21,18 @@ class AdminAuthController extends Controller
     public function login(Request $request)
     {
         $request->validate([
-            'email' => 'required|email',
+            'nip' => 'required|string',
             'password' => 'required|string',
         ]);
 
-        $pegawai = Pegawai::where('email', $request->email)
+        $pegawai = Pegawai::where('nip', $request->nip)
             ->where('role', 'admin')
             ->first();
 
         if (!$pegawai || !Hash::check($request->password, $pegawai->password)) {
             return back()
-                ->withErrors(['login' => 'Alamat email atau kata sandi salah. Silakan periksa kembali.'])
-                ->withInput($request->only('email'));
+                ->withErrors(['login' => 'NIP atau kata sandi salah. Silakan periksa kembali.'])
+                ->withInput($request->only('nip'));
         }
 
         Auth::login($pegawai, $request->boolean('remember'));

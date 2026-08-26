@@ -11,7 +11,7 @@ class PengajuanController extends Controller
     public function semua(Request $request)
     {
         $title = 'Semua Pengajuan';
-        
+
         $totalSemua = Pengajuan::count();
         $totalProses = Pengajuan::where('status', 'proses')->count();
         $totalDisetujui = Pengajuan::where('status', 'disetujui')->count();
@@ -26,7 +26,7 @@ class PengajuanController extends Controller
 
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('judul', 'like', "%{$search}%")
                   ->orWhere('kode', 'like', "%{$search}%");
             });
@@ -43,11 +43,11 @@ class PengajuanController extends Controller
         $pengajuans = $query->latest()->paginate(10)->withQueryString();
 
         return view('admin.pengajuan.semua', compact(
-            'title', 
-            'pengajuans', 
-            'totalSemua', 
-            'totalProses', 
-            'totalDisetujui', 
+            'title',
+            'pengajuans',
+            'totalSemua',
+            'totalProses',
+            'totalDisetujui',
             'totalRevisi'
         ));
     }
@@ -107,13 +107,32 @@ class PengajuanController extends Controller
     public function showDokumen($id)
     {
         $pengajuan = Pengajuan::findOrFail($id);
-        
-        $filePath = public_path('storage/' . $pengajuan->file_proposal); 
 
-        if (file_exists($filePath)) {
-            return response()->file($filePath);
+        if (!$pengajuan->proposal_path) {
+            abort(404, 'Dokumen proposal tidak ditemukan.');
         }
 
-        return redirect(asset('storage/' . $pengajuan->file_proposal));
+        $filePath = storage_path('app/public/' . $pengajuan->proposal_path);
+
+        abort_unless(file_exists($filePath), 404, 'File proposal tidak ditemukan di server.');
+
+        return response()->file($filePath);
+    }
+
+    public function downloadDokumen($id)
+    {
+        $pengajuan = Pengajuan::findOrFail($id);
+
+        if (!$pengajuan->proposal_path) {
+            abort(404, 'Dokumen proposal tidak ditemukan.');
+        }
+
+        $filePath = storage_path('app/public/' . $pengajuan->proposal_path);
+
+        abort_unless(file_exists($filePath), 404, 'File proposal tidak ditemukan di server.');
+
+        $namaFile = $pengajuan->proposal_nama_asli ?? basename($filePath);
+
+        return response()->download($filePath, $namaFile);
     }
 }

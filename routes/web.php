@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\AdminAuthController;
+use App\Http\Controllers\BerkasController;
 use App\Http\Controllers\Dosen\AuthController as DosenAuthController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\PengajuanController as AdminPengajuanController;
@@ -31,17 +32,23 @@ Route::get('/', function () {
 |--------------------------------------------------------------------------
 */
 Route::middleware('guest')->group(function () {
-    // Login Dosen (Menggunakan DosenAuthController)
     Route::get('/login', [DosenAuthController::class, 'showLogin'])->name('login');
     Route::post('/login', [DosenAuthController::class, 'login'])->name('login.submit');
 
-    // Login Khusus Admin (Menggunakan AdminAuthController)
     Route::get('/admin/login', [AdminAuthController::class, 'showLoginForm'])->name('admin.login');
     Route::post('/admin/login', [AdminAuthController::class, 'login'])->name('admin.login.submit');
 });
 
-// Logout Dosen
 Route::post('/logout', [DosenAuthController::class, 'logout'])->name('logout');
+
+/*
+|--------------------------------------------------------------------------
+| Berkas (Preview / Download File) — Wajib Login, Dosen & Admin
+|--------------------------------------------------------------------------
+*/
+Route::middleware('auth')->group(function () {
+    Route::get('/berkas', [BerkasController::class, 'show'])->name('berkas.show');
+});
 
 
 /*
@@ -75,14 +82,12 @@ Route::middleware(['auth', 'role:dosen'])->group(function () {
         Route::post('/kirim', [PengajuanController::class, 'submit'])->name('pengajuan.submit');
         Route::post('/batal', [PengajuanController::class, 'batal'])->name('pengajuan.batal');
 
-        // Halaman sukses setelah proposal berhasil dikirim
         Route::get('/sukses', [PengajuanController::class, 'sukses'])->name('pengajuan.sukses');
     });
 
     Route::get('/riwayat', [RiwayatController::class, 'index'])->name('riwayat');
     Route::get('/pengajuan/{pengajuan}', [RiwayatController::class, 'detail'])->name('pengajuan.detail');
 
-    // ⬅️ TAMBAHAN — sebelumnya hilang, dipindahkan dari sippm lama
     Route::get('/pengajuan/{pengajuan}/edit', [PengajuanController::class, 'edit'])->name('pengajuan.edit');
     Route::put('/pengajuan/{pengajuan}', [PengajuanController::class, 'update'])->name('pengajuan.update');
 
@@ -99,12 +104,10 @@ Route::middleware(['auth', 'role:dosen'])->group(function () {
     Route::post('/laporan/hasil/{pengajuan}/hapus-file', [LaporanController::class, 'hasilHapusFile'])->name('laporan.hasil.hapus-file');
     Route::post('/laporan/hasil/{pengajuan}/hapus-dokumentasi/{index}', [LaporanController::class, 'hasilHapusDokumentasi'])->name('laporan.hasil.hapus-dokumentasi');
 
-
     Route::get('/luaran', [LuaranController::class, 'index'])->name('luaran.index');
     Route::get('/luaran/{luaran}', [LuaranController::class, 'form'])->name('luaran.form');
     Route::post('/luaran/{luaran}', [LuaranController::class, 'store'])->name('luaran.store');
 
-    // ⬅️ TAMBAHAN — Notifikasi Dosen
     Route::get('/notifikasi', [\App\Http\Controllers\Dosen\NotificationController::class, 'index'])->name('notifikasi');
     Route::post('/notifikasi/read-all', [\App\Http\Controllers\Dosen\NotificationController::class, 'markAllAsRead'])->name('notifikasi.readAll');
     Route::post('/notifikasi/{id}/read', [\App\Http\Controllers\Dosen\NotificationController::class, 'markAsRead'])->name('notifikasi.read');
@@ -118,19 +121,16 @@ Route::middleware(['auth', 'role:dosen'])->group(function () {
 */
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
 
-    // Logout khusus Admin
     Route::post('/logout', [AdminAuthController::class, 'logout'])->name('logout');
 
-    // Dashboard Utama Admin
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
 
-    // Menu Daftar Pengajuan
     Route::get('/penelitian', [AdminPengajuanController::class, 'penelitian'])->name('penelitian');
     Route::get('/pengabdian', [AdminPengajuanController::class, 'pengabdian'])->name('pengabdian');
     Route::get('/semua-pengajuan', [AdminPengajuanController::class, 'semua'])->name('semua-pengajuan');
     Route::get('/pengajuan/{id}/dokumen', [AdminPengajuanController::class, 'showDokumen'])->name('pengajuan.dokumen');
+    Route::get('/pengajuan/{id}/download', [AdminPengajuanController::class, 'downloadDokumen'])->name('pengajuan.download');
 
-    // Menu Validasi Proposal & Laporan oleh Admin
     Route::prefix('validasi')->name('validasi.')->group(function () {
         Route::get('/proposal', [ValidasiController::class, 'index'])->name('proposal.index');
         Route::get('/proposal', [ValidasiController::class, 'index'])->name('proposal');
@@ -142,23 +142,17 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
         Route::get('/laporan-kemajuan/{id}', [ValidasiController::class, 'kemajuanDetail'])->name('laporan-kemajuan.detail');
         Route::post('/laporan-kemajuan/{id}', [ValidasiController::class, 'kemajuanUpdate'])->name('laporan-kemajuan.update');
 
-        // ⬅️ DIUBAH — sebelumnya closure langsung ke view, sekarang lewat controller
         Route::get('/laporan_hasil', [ValidasiController::class, 'hasilIndex'])->name('laporan_hasil');
         Route::get('/laporan_hasil/{id}', [ValidasiController::class, 'hasilDetail'])->name('laporan_hasil.detail');
         Route::post('/laporan_hasil/{id}', [ValidasiController::class, 'hasilUpdate'])->name('laporan_hasil.update');
     });
 
-    // ==========================================
-    // MENU MASTER DATA (Digabung dalam MasterDataController)
-    // ==========================================
     Route::prefix('master')->name('master.')->group(function () {
-        // Skema
         Route::get('/skema', [MasterDataController::class, 'skemaIndex'])->name('skema');
         Route::post('/skema', [MasterDataController::class, 'skemaStore'])->name('skema.store');
         Route::put('/skema/{id}', [MasterDataController::class, 'skemaUpdate'])->name('skema.update');
         Route::delete('/skema/{id}', [MasterDataController::class, 'skemaDestroy'])->name('skema.destroy');
 
-        // Data Pegawai & Import Excel
         Route::get('/pegawai', [MasterDataController::class, 'pegawaiIndex'])->name('pegawai');
         Route::post('/pegawai/import', [MasterDataController::class, 'pegawaiImport'])->name('pegawai.import');
         Route::get('/pegawai/template', [MasterDataController::class, 'pegawaiDownloadTemplate'])->name('pegawai.template');
@@ -166,13 +160,11 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
         Route::put('/pegawai/{id}', [MasterDataController::class, 'pegawaiUpdate'])->name('pegawai.update');
         Route::delete('/pegawai/{id}', [MasterDataController::class, 'pegawaiDestroy'])->name('pegawai.destroy');
 
-        // Rumpun Ilmu
         Route::get('/rumpun-ilmu', [MasterDataController::class, 'rumpunIlmuIndex'])->name('rumpun');
         Route::post('/rumpun-ilmu', [MasterDataController::class, 'rumpunStore'])->name('rumpun.store');
         Route::put('/rumpun-ilmu/{id}', [MasterDataController::class, 'rumpunUpdate'])->name('rumpun.update');
         Route::delete('/rumpun-ilmu/{id}', [MasterDataController::class, 'rumpunDestroy'])->name('rumpun.destroy');
 
-        // Luaran Master
         Route::get('/luaran', [MasterDataController::class, 'luaranIndex'])->name('luaran');
         Route::post('/luaran', [MasterDataController::class, 'luaranStore'])->name('luaran.store');
         Route::put('/luaran/{id}', [MasterDataController::class, 'luaranUpdate'])->name('luaran.update');
@@ -183,10 +175,8 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
         return view('admin.laporan');
     })->name('laporan');
 
-    // Activity Log
     Route::get('/activity-log', [ActivityLogController::class, 'index'])->name('activity_log');
 
-    // Notifikasi
     Route::get('/notifikasi', [NotificationController::class, 'index'])->name('notifikasi');
     Route::post('/notifikasi/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifikasi.readAll');
     Route::post('/notifikasi/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifikasi.read');

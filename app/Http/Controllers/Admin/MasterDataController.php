@@ -9,6 +9,7 @@ use App\Models\LuaranMaster;
 use App\Models\Pegawai;
 use App\Imports\PegawaiImport;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
@@ -108,7 +109,7 @@ class MasterDataController extends Controller
     {
         $jenis = $request->get('jenis', 'penelitian');
         $luarans = LuaranMaster::where('jenis', $jenis)->paginate(10);
-        
+
         return view('admin.master.luaran', compact('luarans', 'jenis'));
     }
 
@@ -150,13 +151,97 @@ class MasterDataController extends Controller
     }
 
 
-    // ==================== MASTER PEGAWAI & IMPORT ====================
+    // ==================== MASTER PEGAWAI (MANAJEMEN USER) & IMPORT ====================
 
-    // Menampilkan halaman data pegawai
+    // Menampilkan halaman manajemen user / data pegawai
     public function pegawaiIndex(Request $request)
     {
         $pegawais = Pegawai::latest()->paginate(10);
         return view('admin.master.pegawai', compact('pegawais'));
+    }
+
+    // Tambah pegawai baru (CRUD - Create)
+    public function pegawaiStore(Request $request)
+    {
+        $validated = $request->validate([
+            'nip' => 'required|string|max:50|unique:pegawais,nip',
+            'nama' => 'required|string|max:255',
+            'password' => 'required|string|min:6',
+            'role' => 'required|in:admin,dosen',
+            'jabatan' => 'nullable|string|max:100',
+            'pangkat' => 'nullable|string|max:100',
+            'jurusan' => 'nullable|string|max:150',
+            'prodi' => 'nullable|string|max:150',
+            'email' => 'nullable|email|max:150|unique:pegawais,email',
+            'hp' => 'nullable|string|max:20',
+            'nidn' => 'nullable|string|max:50',
+        ], [
+            'nip.required' => 'NIP wajib diisi.',
+            'nip.unique' => 'NIP sudah terdaftar.',
+            'nama.required' => 'Nama wajib diisi.',
+            'password.required' => 'Password wajib diisi.',
+            'password.min' => 'Password minimal 6 karakter.',
+            'role.required' => 'Role wajib dipilih.',
+            'email.unique' => 'Email sudah digunakan pegawai lain.',
+        ]);
+
+        $validated['password'] = Hash::make($validated['password']);
+        $validated['must_change_password'] = true;
+
+        Pegawai::create($validated);
+
+        return redirect()->route('admin.master.pegawai')->with('success', 'Data pegawai berhasil ditambahkan.');
+    }
+
+    // Ubah data pegawai (CRUD - Update)
+    public function pegawaiUpdate(Request $request, $id)
+    {
+        $pegawai = Pegawai::findOrFail($id);
+
+        $validated = $request->validate([
+            'nip' => 'required|string|max:50|unique:pegawais,nip,' . $pegawai->id,
+            'nama' => 'required|string|max:255',
+            'password' => 'nullable|string|min:6',
+            'role' => 'required|in:admin,dosen',
+            'jabatan' => 'nullable|string|max:100',
+            'pangkat' => 'nullable|string|max:100',
+            'jurusan' => 'nullable|string|max:150',
+            'prodi' => 'nullable|string|max:150',
+            'email' => 'nullable|email|max:150|unique:pegawais,email,' . $pegawai->id,
+            'hp' => 'nullable|string|max:20',
+            'nidn' => 'nullable|string|max:50',
+        ], [
+            'nip.required' => 'NIP wajib diisi.',
+            'nip.unique' => 'NIP sudah terdaftar.',
+            'nama.required' => 'Nama wajib diisi.',
+            'password.min' => 'Password minimal 6 karakter.',
+            'role.required' => 'Role wajib dipilih.',
+            'email.unique' => 'Email sudah digunakan pegawai lain.',
+        ]);
+
+        if (!empty($validated['password'])) {
+            $validated['password'] = Hash::make($validated['password']);
+        } else {
+            unset($validated['password']);
+        }
+
+        $pegawai->update($validated);
+
+        return redirect()->route('admin.master.pegawai')->with('success', 'Data pegawai berhasil diperbarui.');
+    }
+
+    // Hapus pegawai (CRUD - Delete)
+    public function pegawaiDestroy($id)
+    {
+        $pegawai = Pegawai::findOrFail($id);
+
+        if ($pegawai->id === auth()->id()) {
+            return redirect()->route('admin.master.pegawai')->with('error', 'Anda tidak bisa menghapus akun Anda sendiri.');
+        }
+
+        $pegawai->delete();
+
+        return redirect()->route('admin.master.pegawai')->with('success', 'Data pegawai berhasil dihapus.');
     }
 
     // Proses import data pegawai dari file Excel/CSV
@@ -182,7 +267,7 @@ class MasterDataController extends Controller
     public function pegawaiDownloadTemplate(): BinaryFileResponse
     {
         $path = public_path('templates/template_pegawai.xlsx');
-        
+
         // Pastikan Anda sudah meletakkan file template di public/templates/template_pegawai.xlsx
         return response()->download($path, 'Template_Import_Pegawai.xlsx');
     }
