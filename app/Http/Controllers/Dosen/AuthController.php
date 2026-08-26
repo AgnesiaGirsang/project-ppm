@@ -10,11 +10,15 @@ use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
+    /**
+     * Halaman login user/dosen (beranda "/").
+     */
     public function showLogin()
     {
         if (Auth::check() && Auth::user()->role === 'dosen') {
             return redirect()->route('dashboard');
         }
+
         return view('auth.login');
     }
 
@@ -23,6 +27,9 @@ class AuthController extends Controller
         $request->validate([
             'nip' => 'required|string',
             'password' => 'required|string',
+        ], [
+            'nip.required' => 'NIP wajib diisi.',
+            'password.required' => 'Password wajib diisi.',
         ]);
 
         $pegawai = Pegawai::where('nip', $request->nip)
@@ -45,6 +52,41 @@ class AuthController extends Controller
         return redirect()->route('dashboard');
     }
 
+    /**
+     * Halaman login admin terpisah, diakses lewat "/login".
+     */
+    public function showAdminLogin()
+    {
+        if (Auth::check() && Auth::user()->role === 'admin') {
+            return redirect('/admin/dashboard');
+        }
+
+        return view('auth.admin-login');
+    }
+
+    public function adminLogin(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+            'password' => 'required|string',
+        ]);
+
+        $pegawai = Pegawai::where('email', $request->email)
+            ->where('role', 'admin')
+            ->first();
+
+        if (!$pegawai || !Hash::check($request->password, $pegawai->password)) {
+            return back()
+                ->withErrors(['login' => 'Alamat email atau kata sandi salah. Silakan periksa kembali.'])
+                ->withInput($request->only('email'));
+        }
+
+        Auth::login($pegawai, $request->boolean('remember'));
+        $request->session()->regenerate();
+
+        return redirect('/admin/dashboard');
+    }
+
     public function logout(Request $request)
     {
         Auth::logout();
@@ -63,6 +105,9 @@ class AuthController extends Controller
     {
         $request->validate([
             'password_baru' => 'required|string|min:6|confirmed',
+        ], [
+            'password_baru.min' => 'Password baru minimal 6 karakter.',
+            'password_baru.confirmed' => 'Konfirmasi password tidak sama.',
         ]);
 
         $user = Auth::user();

@@ -21,26 +21,26 @@ class Pengajuan extends Model
         ];
     }
 
-    // Ketua pengaju (Eksplisit menyertakan foreign key 'pegawai_id' dan local key 'id')
+    // Ketua pengaju
     public function pegawai()
     {
-        return $this->belongsTo(Pegawai::class, 'pegawai_id', 'id');
+        return $this->belongsTo(Pegawai::class);
     }
 
     public function skema()
     {
-        return $this->belongsTo(Skema::class, 'skema_id', 'id');
+        return $this->belongsTo(Skema::class);
     }
 
     public function rumpunIlmu()
     {
-        return $this->belongsTo(RumpunIlmu::class, 'rumpun_ilmu_id', 'id');
+        return $this->belongsTo(RumpunIlmu::class);
     }
 
     // Semua anggota tim (termasuk ketua)
     public function tim()
     {
-        return $this->hasMany(PengajuanTim::class, 'pengajuan_id', 'id');
+        return $this->hasMany(PengajuanTim::class);
     }
 
     public function anggotaTim()
@@ -50,20 +50,20 @@ class Pengajuan extends Model
 
     public function luaran()
     {
-        return $this->hasMany(PengajuanLuaran::class, 'pengajuan_id', 'id');
+        return $this->hasMany(PengajuanLuaran::class);
     }
 
     public function laporanKemajuan()
     {
-        return $this->hasOne(LaporanKemajuan::class, 'pengajuan_id', 'id');
+        return $this->hasOne(LaporanKemajuan::class);
     }
 
     public function laporanHasil()
     {
-        return $this->hasOne(LaporanHasil::class, 'pengajuan_id', 'id');
+        return $this->hasOne(LaporanHasil::class);
     }
 
-    // Label status buat ditampilin di badge
+    // Label status buat ditampilin di badge (samain sama prototype)
     public function statusLabel(): array
     {
         return match ($this->status) {

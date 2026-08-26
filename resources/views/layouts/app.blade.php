@@ -33,7 +33,8 @@
                     href="{{ route('laporan.index', 'hasil') }}"><span class="ic">▤</span>Laporan Hasil</a>
                 <a class="{{ request()->routeIs('luaran.*') ? 'active' : '' }}"
                     href="{{ route('luaran.index') }}"><span class="ic">★</span>Luaran</a>
-                <a href="#"><span class="ic">🔔</span>Notifikasi</a>
+                <a class="{{ request()->routeIs('notifikasi*') ? 'active' : '' }}"
+                    href="{{ route('notifikasi') }}"><span class="ic">🔔</span>Notifikasi</a>
                 <a class="{{ request()->routeIs('profil*') ? 'active' : '' }}" href="{{ route('profil') }}"><span
                         class="ic">◈</span>Profil</a>
                 <a href="{{ route('ubah-password') }}"
@@ -55,7 +56,8 @@
                     <div class="crumbs">@yield('crumbs', 'Dashboard')</div>
                 </div>
                 <div class="who">
-                    <div class="bell">&#128276;<span class="dot"></span></div>
+                    <a href="{{ route('notifikasi') }}" class="bell" style="text-decoration:none;">&#128276;<span
+                            class="dot"></span></a>
                     <div class="avatar">{{ auth()->user()->initials() }}</div>
                     <div class="meta">
                         <b>{{ auth()->user()->nama }}</b>

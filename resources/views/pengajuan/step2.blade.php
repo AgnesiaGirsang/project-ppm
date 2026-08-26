@@ -97,9 +97,9 @@
       <td colspan="2">
         <select onchange="changeAnggota(${idx}, this.value)">${optionsHTML(t.pegawai_id)}</select>
         ${isExternal ? `<div style="display:flex; gap:6px; margin-top:6px;">
-                  <input type="text" placeholder="Nama lengkap" value="${t.nama_external || ''}" oninput="tim[${idx}].nama_external=this.value">
-                  <input type="text" placeholder="Institusi asal" value="${t.institusi_external || ''}" oninput="tim[${idx}].institusi_external=this.value; renderTim();">
-                </div>` : ''}
+                                                                                                                                                                                                                              <input type="text" placeholder="Nama lengkap" value="${t.nama_external || ''}" oninput="tim[${idx}].nama_external=this.value">
+                                                                                                                                                                                                                              <input type="text" placeholder="Institusi asal" value="${t.institusi_external || ''}" oninput="tim[${idx}].institusi_external=this.value; renderTim();">
+                                                                                                                                                                                                                            </div>` : ''}
       </td>
       <td>${isExternal ? (t.institusi_external || '-') : (pegawai ? pegawai.jurusan : '-')}</td>
       <td><span class="badge b-revisi">Anggota</span></td>

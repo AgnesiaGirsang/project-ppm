@@ -250,3 +250,20 @@
     font-weight: 700;
     text-align: right;
 }
+
+/* ===== Laporan Hasil: input link di dalam luaran-item ===== */
+.luaran-item input[type=text] {
+    width: 100%;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 7px 10px;
+    font-family: inherit;
+    font-size: 12px;
+    margin-top: 8px;
+    background: #fafcfb;
+}
+
+.luaran-item input[type=text]:disabled {
+    background: #f2f4f3;
+    color: var(--ink-300);
+}

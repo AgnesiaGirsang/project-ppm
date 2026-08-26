@@ -13,8 +13,10 @@ class RiwayatController extends Controller
         $user = Auth::user();
 
         $query = Pengajuan::with(['skema'])
-            ->where('pegawai_id', $user->id)
-            ->orWhereHas('tim', fn ($q) => $q->where('pegawai_id', $user->id));
+            ->where(function ($sub) use ($user) {
+                $sub->where('pegawai_id', $user->id)
+                    ->orWhereHas('tim', fn ($q) => $q->where('pegawai_id', $user->id));
+            });
 
         // Filter tab status
         if ($request->filled('status') && $request->status !== 'semua') {
@@ -40,7 +42,10 @@ class RiwayatController extends Controller
         $daftar = $query->latest()->paginate(10)->withQueryString();
 
         // Hitung jumlah per status buat badge di tab (tanpa filter status biar akurat)
-        $baseQuery = fn () => Pengajuan::where('pegawai_id', $user->id)->orWhereHas('tim', fn ($q) => $q->where('pegawai_id', $user->id));
+        $baseQuery = fn () => Pengajuan::where(function ($sub) use ($user) {
+            $sub->where('pegawai_id', $user->id)
+                ->orWhereHas('tim', fn ($q) => $q->where('pegawai_id', $user->id));
+        });
         $counts = [
             'semua' => $baseQuery()->count(),
             'proses' => $baseQuery()->where('status', 'proses')->count(),
@@ -62,7 +67,6 @@ class RiwayatController extends Controller
     {
         $user = Auth::user();
 
-        // Pastikan cuma ketua atau anggota tim yang boleh lihat
         $bolehLihat = $pengajuan->pegawai_id === $user->id || $pengajuan->tim()->where('pegawai_id', $user->id)->exists();
         abort_unless($bolehLihat, 403, 'Anda tidak punya akses ke pengajuan ini.');
 

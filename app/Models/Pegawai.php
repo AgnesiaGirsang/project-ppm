@@ -9,11 +9,6 @@ class Pegawai extends Authenticatable
 {
     use Notifiable;
 
-    // Tambahkan konfigurasi primary key karena menggunakan 'nip' (varchar)
-    protected $primaryKey = 'nip';
-    public $incrementing = false;
-    protected $keyType = 'string';
-
     protected $fillable = [
         'nip', 'nama', 'password', 'role', 'jabatan', 'pangkat',
         'jurusan', 'prodi', 'email', 'hp', 'nidn', 'foto', 'must_change_password',

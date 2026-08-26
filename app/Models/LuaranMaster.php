@@ -14,7 +14,7 @@ class LuaranMaster extends Model
     {
         return [
             'wajib' => 'boolean',
-            'opsi' => 'string', // Ubah jika opsi disimpan sebagai string/teks biasa
+            'opsi' => 'array',
         ];
     }
 }

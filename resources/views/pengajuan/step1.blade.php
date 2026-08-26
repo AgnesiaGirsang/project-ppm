@@ -66,7 +66,7 @@
                 <div>
                     <div class="field"><label>Rumpun Ilmu</label>
                         <select name="rumpun_ilmu_id">
-                            <option value="">Pilih rumpun ilmu (opsional)</option>
+                            <option value="">Pilih rumpun ilmu</option>
                             @foreach ($rumpunIlmu as $r)
                                 <option value="{{ $r->id }}"
                                     {{ (int) $w['rumpun_ilmu_id'] === $r->id ? 'selected' : '' }}>{{ $r->nama }}

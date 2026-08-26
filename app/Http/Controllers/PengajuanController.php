@@ -73,8 +73,8 @@ class PengajuanController extends Controller
 
         $skemaGrouped = [];
         foreach (Skema::where('aktif', true)->orderBy('nama')->get() as $s) {
-            $key = $s->jenis . '|' . $s->jalur;
-            $skemaGrouped[$key][] = ['id' => $s->id, 'nama' => $s->nama];
+            $skemaGrouped[$s->jenis . '|simlitabkes'][] = ['id' => $s->id, 'nama' => $s->nama];
+            $skemaGrouped[$s->jenis . '|mandiri'][] = ['id' => $s->id, 'nama' => $s->nama];
         }
 
         return view('pengajuan.step1', [
@@ -361,7 +361,19 @@ class PengajuanController extends Controller
 
         $this->resetWizard();
 
-        return redirect()->route('dashboard')->with('success', "Pengajuan {$pengajuan->kode} berhasil dikirim dan menunggu validasi admin.");
+        return redirect()->route('pengajuan.sukses');
+    }
+
+    public function sukses()
+    {
+        $pengajuan = Pengajuan::where('pegawai_id', Auth::id())->latest()->first();
+
+        abort_unless($pengajuan, 404);
+
+        return view('pengajuan.sukses', [
+            'kode' => $pengajuan->kode,
+            'jalur' => $pengajuan->jalur,
+        ]);
     }
 
     public function batal()
@@ -373,5 +385,91 @@ class PengajuanController extends Controller
         $this->resetWizard();
 
         return redirect()->route('dashboard');
+    }
+
+    /* ===================== EDIT PENGAJUAN (khusus status revisi) ===================== */
+
+    public function edit(Pengajuan $pengajuan)
+    {
+        $user = Auth::user();
+        abort_unless($pengajuan->pegawai_id === $user->id, 403);
+
+        if ($pengajuan->status !== 'revisi') {
+            return redirect()->route('pengajuan.detail', $pengajuan)->with('error', 'Pengajuan ini tidak sedang dalam status revisi.');
+        }
+
+        $pengajuan->load('tim');
+        $anggotaTersedia = Pegawai::where('role', 'dosen')->where('id', '!=', $user->id)->orderBy('nama')->get();
+
+        $timTerpilih = $pengajuan->tim->where('peran', 'anggota')->whereNotNull('pegawai_id')->pluck('pegawai_id')->toArray();
+        $timLuarExisting = $pengajuan->tim->where('peran', 'anggota')->whereNull('pegawai_id')
+            ->map(fn ($t) => ['nama' => $t->nama_luar, 'instansi' => $t->instansi_luar])->values()->toArray();
+
+        return view('pengajuan.edit', [
+            'pengajuan' => $pengajuan,
+            'ketua' => $pengajuan->pegawai,
+            'anggotaTersedia' => $anggotaTersedia,
+            'timTerpilih' => $timTerpilih,
+            'timLuarExisting' => $timLuarExisting,
+        ]);
+    }
+
+    public function update(Request $request, Pengajuan $pengajuan)
+    {
+        $user = Auth::user();
+        abort_unless($pengajuan->pegawai_id === $user->id, 403);
+
+        if ($pengajuan->status !== 'revisi') {
+            return redirect()->route('pengajuan.detail', $pengajuan)->with('error', 'Pengajuan ini tidak sedang dalam status revisi.');
+        }
+
+        $data = $request->validate([
+            'judul' => 'required|string|max:255',
+            'total_biaya' => 'required|numeric|min:0',
+            'proposal' => 'nullable|file|mimes:pdf|max:2048',
+            'tim' => 'nullable|array',
+            'tim.*' => 'exists:pegawais,id',
+            'tim_luar_nama' => 'nullable|array',
+            'tim_luar_nama.*' => 'nullable|string|max:255',
+            'tim_luar_instansi' => 'nullable|array',
+            'tim_luar_instansi.*' => 'nullable|string|max:255',
+        ]);
+
+        DB::transaction(function () use ($request, $data, $pengajuan) {
+            $update = [
+                'judul' => $data['judul'],
+                'total_biaya' => $data['total_biaya'],
+                'status' => 'proses',
+            ];
+
+            if ($request->hasFile('proposal')) {
+                $file = $request->file('proposal');
+                $update['proposal_path'] = $file->store('proposal', 'public');
+                $update['proposal_nama_asli'] = $file->getClientOriginalName();
+                $update['proposal_size'] = $file->getSize();
+            }
+
+            $pengajuan->update($update);
+
+            $pengajuan->tim()->where('peran', 'anggota')->delete();
+
+            foreach ($data['tim'] ?? [] as $pegawaiId) {
+                PengajuanTim::create(['pengajuan_id' => $pengajuan->id, 'pegawai_id' => $pegawaiId, 'peran' => 'anggota']);
+            }
+
+            foreach ($data['tim_luar_nama'] ?? [] as $i => $nama) {
+                if (trim((string) $nama) !== '') {
+                    PengajuanTim::create([
+                        'pengajuan_id' => $pengajuan->id,
+                        'pegawai_id' => null,
+                        'nama_luar' => trim($nama),
+                        'instansi_luar' => trim($data['tim_luar_instansi'][$i] ?? '') ?: null,
+                        'peran' => 'anggota',
+                    ]);
+                }
+            }
+        });
+
+        return redirect()->route('pengajuan.detail', $pengajuan)->with('success', 'Revisi berhasil dikirim ulang dan menunggu validasi admin.');
     }
 }
