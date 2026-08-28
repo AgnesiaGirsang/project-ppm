@@ -11,7 +11,7 @@ class LaporanHasil extends Model
     protected $fillable = [
         'pengajuan_id', 'ringkasan_hasil', 'file_path', 'file_nama_asli', 'file_size',
         'link_inovasi_produk', 'no_sk', 'luaran_tercapai', 'dokumentasi',
-        'status', 'catatan_validator',
+        'persentase', 'status', 'catatan_validator',
     ];
 
     protected $casts = [

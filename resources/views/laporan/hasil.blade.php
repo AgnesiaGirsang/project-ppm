@@ -1,13 +1,13 @@
 @extends('layouts.app')
 
-@section('title', 'Laporan Kemajuan')
-@section('crumbs', 'Menu Dosen / Laporan Kemajuan')
+@section('title', 'Laporan Hasil')
+@section('crumbs', 'Menu Dosen / Laporan Hasil')
 
 @section('content')
     <link rel="stylesheet" href="{{ asset('css/wizard.css') }}">
 
     <style>
-        .lk-table-wrap {
+        .lh-table-wrap {
             margin-top: 16px;
             border: 1px solid #e5e7eb;
             border-radius: 12px;
@@ -15,13 +15,13 @@
             box-shadow: 0 1px 3px rgba(16, 24, 40, 0.06);
         }
 
-        table.lk-table {
+        table.lh-table {
             width: 100%;
             border-collapse: collapse;
             font-size: 13.5px;
         }
 
-        table.lk-table thead th {
+        table.lh-table thead th {
             background: linear-gradient(180deg, #00875A 0%, #046a48 100%);
             color: #ffffff;
             font-size: 11px;
@@ -34,56 +34,56 @@
             white-space: nowrap;
         }
 
-        table.lk-table thead th:first-child {
+        table.lh-table thead th:first-child {
             width: 48px;
             text-align: center;
             border-top-left-radius: 12px;
         }
 
-        table.lk-table thead th:last-child {
+        table.lh-table thead th:last-child {
             text-align: right;
             border-top-right-radius: 12px;
         }
 
-        table.lk-table tbody td {
+        table.lh-table tbody td {
             padding: 14px 16px;
             border-bottom: 1px solid #f1f3f5;
             vertical-align: middle;
             color: #1f2937;
         }
 
-        table.lk-table tbody tr:last-child td {
+        table.lh-table tbody tr:last-child td {
             border-bottom: none;
         }
 
-        table.lk-table tbody tr:hover {
+        table.lh-table tbody tr:hover {
             background: #f7faf9;
         }
 
-        table.lk-table td:first-child {
+        table.lh-table td:first-child {
             text-align: center;
             color: #9ca3af;
             font-weight: 600;
         }
 
-        table.lk-table td:last-child {
+        table.lh-table td:last-child {
             text-align: right;
             white-space: nowrap;
         }
 
-        .lk-judul {
+        .lh-judul {
             font-weight: 600;
             color: #111827;
             display: block;
         }
 
-        .lk-kode {
+        .lh-kode {
             font-size: 11.5px;
             color: #6b7280;
             font-variant-numeric: tabular-nums;
         }
 
-        .lk-badge {
+        .lh-badge {
             display: inline-flex;
             align-items: center;
             padding: 4px 11px;
@@ -92,37 +92,37 @@
             font-weight: 700;
         }
 
-        .lk-badge.belum {
+        .lh-badge.belum {
             background: #f1f5f9;
             color: #64748b;
         }
 
-        .lk-badge.draft {
+        .lh-badge.draft {
             background: #fef3c7;
             color: #b45309;
         }
 
-        .lk-badge.proses {
+        .lh-badge.proses {
             background: #dbeafe;
             color: #1d4ed8;
         }
 
-        .lk-badge.disetujui {
+        .lh-badge.disetujui {
             background: #e6f4ee;
             color: #00875A;
         }
 
-        .lk-badge.revisi {
+        .lh-badge.revisi {
             background: #fee2e2;
             color: #dc2626;
         }
 
-        .lk-actions {
+        .lh-actions {
             display: inline-flex;
             gap: 6px;
         }
 
-        .lk-btn {
+        .lh-btn {
             display: inline-flex;
             align-items: center;
             gap: 6px;
@@ -136,44 +136,41 @@
             transition: all 0.15s ease;
         }
 
-        .lk-btn svg {
+        .lh-btn svg {
             width: 13px;
             height: 13px;
             flex-shrink: 0;
         }
 
-        /* Aksi utama: ajukan / lanjutkan mengisi */
-        .lk-btn-primary {
+        .lh-btn-primary {
             background: linear-gradient(180deg, #00875A 0%, #046a48 100%);
             color: #fff;
             box-shadow: 0 1px 2px rgba(0, 135, 90, 0.3);
         }
 
-        .lk-btn-primary:hover {
+        .lh-btn-primary:hover {
             box-shadow: 0 3px 8px rgba(0, 135, 90, 0.4);
             transform: translateY(-1px);
         }
 
-        /* Aksi edit revisi: kuning/amber, beda dari primary hijau */
-        .lk-btn-warning {
+        .lh-btn-warning {
             background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%);
             color: #fff;
             box-shadow: 0 1px 2px rgba(217, 119, 6, 0.3);
         }
 
-        .lk-btn-warning:hover {
+        .lh-btn-warning:hover {
             box-shadow: 0 3px 8px rgba(217, 119, 6, 0.4);
             transform: translateY(-1px);
         }
 
-        /* Detail / lihat: biru-ungu lembut, netral tapi tetap berwarna */
-        .lk-btn-detail {
+        .lh-btn-detail {
             background: #eef2ff;
             color: #4338ca;
             border-color: #e0e7ff;
         }
 
-        .lk-btn-detail:hover {
+        .lh-btn-detail:hover {
             background: #e0e7ff;
             border-color: #c7d2fe;
             transform: translateY(-1px);
@@ -190,17 +187,18 @@
     @if (isset($tanpaKegiatan) && $tanpaKegiatan)
         <div class="card">
             <div style="text-align:center; color:var(--ink-500); padding:24px; font-size:13px;">Belum ada pengajuan
-                jalur Simlitabkes yang berada di tahap Laporan Kemajuan / Laporan Hasil.</div>
+                yang sudah berada di tahap Laporan Hasil. Laporan Hasil bisa diisi setelah pengajuanmu melewati tahap
+                Proposal (dan Laporan Kemajuan, untuk jalur Simlitabkes).</div>
         </div>
     @else
         <div class="card">
-            <h3 style="margin-bottom:2px;">Daftar Kegiatan — Laporan Kemajuan</h3>
-            <div class="sub" style="font-size:11.5px; color:var(--ink-500); margin-bottom:14px;">Kegiatan jalur
-                Simlitabkes yang sudah lolos validasi proposal admin akan muncul di sini. Klik "Ajukan Laporan
-                Kemajuan" untuk kegiatan yang belum pernah mengisi laporan.</div>
+            <h3 style="margin-bottom:2px;">Daftar Kegiatan — Laporan Hasil</h3>
+            <div class="sub" style="font-size:11.5px; color:var(--ink-500); margin-bottom:14px;">Kegiatan yang sudah
+                berada di tahap Laporan Hasil akan muncul di sini. Klik "Ajukan Laporan Hasil" untuk kegiatan yang
+                belum pernah mengisi laporan.</div>
 
-            <div class="lk-table-wrap">
-                <table class="lk-table">
+            <div class="lh-table-wrap">
+                <table class="lh-table">
                     <thead>
                         <tr>
                             <th>No</th>
@@ -217,29 +215,29 @@
                             <tr>
                                 <td>{{ $i + 1 }}</td>
                                 <td>
-                                    <span class="lk-judul">{{ $keg->judul }}</span>
-                                    <span class="lk-kode">{{ $keg->kode }}</span>
+                                    <span class="lh-judul">{{ $keg->judul }}</span>
+                                    <span class="lh-kode">{{ $keg->kode }}</span>
                                 </td>
                                 <td>{{ $keg->skema->nama ?? '-' }}</td>
                                 <td>
                                     @if (!$laporan)
-                                        <span class="lk-badge belum">Belum Diajukan</span>
+                                        <span class="lh-badge belum">Belum Diajukan</span>
                                     @elseif ($laporan->status === 'draft')
-                                        <span class="lk-badge draft">Draft</span>
+                                        <span class="lh-badge draft">Draft</span>
                                     @elseif ($laporan->status === 'proses')
-                                        <span class="lk-badge proses">Sedang Diproses</span>
+                                        <span class="lh-badge proses">Menunggu Validasi</span>
                                     @elseif ($laporan->status === 'disetujui')
-                                        <span class="lk-badge disetujui">Disetujui</span>
+                                        <span class="lh-badge disetujui">Disetujui</span>
                                     @elseif ($laporan->status === 'revisi')
-                                        <span class="lk-badge revisi">Perlu Direvisi</span>
+                                        <span class="lh-badge revisi">Perlu Direvisi</span>
                                     @endif
                                 </td>
                                 <td>{{ $keg->created_at->format('d M Y') }}</td>
                                 <td>
-                                    <div class="lk-actions">
+                                    <div class="lh-actions">
                                         @if (!$laporan)
-                                            <a href="{{ route('laporan.kemajuan.form', $keg) }}"
-                                                class="lk-btn lk-btn-primary">
+                                            <a href="{{ route('laporan.form', ['hasil', $keg]) }}"
+                                                class="lh-btn lh-btn-primary">
                                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                                     stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                                                     <line x1="12" y1="5" x2="12" y2="19">
@@ -250,8 +248,8 @@
                                                 Ajukan Laporan
                                             </a>
                                         @elseif ($laporan->status === 'draft')
-                                            <a href="{{ route('laporan.kemajuan.form', $keg) }}"
-                                                class="lk-btn lk-btn-primary">
+                                            <a href="{{ route('laporan.form', ['hasil', $keg]) }}"
+                                                class="lh-btn lh-btn-primary">
                                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                                     stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                                                     <path d="M12 20h9"></path>
@@ -260,17 +258,8 @@
                                                 Lanjutkan Mengisi
                                             </a>
                                         @elseif ($laporan->status === 'revisi')
-                                            <a href="{{ route('laporan.kemajuan.detail', $keg) }}"
-                                                class="lk-btn lk-btn-detail">
-                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                                    stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"></path>
-                                                    <circle cx="12" cy="12" r="3"></circle>
-                                                </svg>
-                                                Detail
-                                            </a>
-                                            <a href="{{ route('laporan.kemajuan.form', $keg) }}"
-                                                class="lk-btn lk-btn-warning">
+                                            <a href="{{ route('laporan.form', ['hasil', $keg]) }}"
+                                                class="lh-btn lh-btn-warning">
                                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                                     stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                                                     <path d="M12 20h9"></path>
@@ -279,8 +268,8 @@
                                                 Edit
                                             </a>
                                         @else
-                                            <a href="{{ route('laporan.kemajuan.detail', $keg) }}"
-                                                class="lk-btn lk-btn-detail">
+                                            <a href="{{ route('laporan.form', ['hasil', $keg]) }}"
+                                                class="lh-btn lh-btn-detail">
                                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                                     stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                                                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"></path>

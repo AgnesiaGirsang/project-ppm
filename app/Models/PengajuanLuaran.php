@@ -8,7 +8,14 @@ class PengajuanLuaran extends Model
 {
     protected $table = 'pengajuan_luaran';
 
-    protected $fillable = ['pengajuan_id', 'luaran_master_id', 'opsi_dipilih'];
+    protected $fillable = ['pengajuan_id', 'luaran_master_id', 'opsi_dipilih', 'is_wajib'];
+
+    protected function casts(): array
+    {
+        return [
+            'is_wajib' => 'boolean',
+        ];
+    }
 
     public function pengajuan()
     {

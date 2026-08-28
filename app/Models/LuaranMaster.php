@@ -6,15 +6,14 @@ use Illuminate\Database\Eloquent\Model;
 
 class LuaranMaster extends Model
 {
-    protected $table = 'luaran_master';
+    protected $table = 'luaran_masters';
 
-    protected $fillable = ['jenis', 'nama', 'wajib', 'opsi'];
+    protected $fillable = ['jenis', 'nama', 'opsi_indikator'];
 
     protected function casts(): array
     {
         return [
-            'wajib' => 'boolean',
-            'opsi' => 'array',
+            'opsi_indikator' => 'array',
         ];
     }
 }

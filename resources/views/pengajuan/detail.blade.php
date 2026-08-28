@@ -72,7 +72,7 @@
             <h4>Rencana Luaran</h4>
             @forelse ($p->luaran as $l)
                 <div class="review-row">
-                    <span class="k">{{ $l->luaranMaster->wajib ? 'Wajib' : 'Tambahan' }}</span>
+                    <span class="k">{{ $l->is_wajib ? 'Wajib' : 'Tambahan' }}</span>
                     <span
                         class="v">{{ $l->luaranMaster->nama }}{{ $l->opsi_dipilih && $l->opsi_dipilih !== '1' ? ' — ' . $l->opsi_dipilih : '' }}</span>
                 </div>
@@ -86,7 +86,7 @@
         </div>
 
         <div style="display:flex; gap:10px;">
-            <a href="{{ route('riwayat') }}" class="btn btn-outline">← Kembali ke Riwayat</a>
+            <a href="{{ route('pengajuan.daftar') }}" class="btn btn-outline">← Kembali ke Daftar Pengajuan Proposal</a>
             @if ($p->status === 'revisi' && $p->pegawai_id === auth()->id())
                 <a href="{{ route('pengajuan.edit', $p) }}" class="btn btn-primary">✎ Edit & Kirim Ulang Revisi</a>
             @endif

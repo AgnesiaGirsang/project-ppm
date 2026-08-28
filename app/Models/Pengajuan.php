@@ -10,7 +10,8 @@ class Pengajuan extends Model
 
     protected $fillable = [
         'kode', 'pegawai_id', 'jenis', 'jalur', 'skema_id', 'rumpun_ilmu_id',
-        'judul', 'tahun', 'proposal_path', 'proposal_nama_asli', 'proposal_size',
+        'judul', 'tahun_anggaran', 'tahun_pengajuan', 'tahun_pelaksanaan', 'tahun_capaian',
+        'proposal_path', 'proposal_nama_asli', 'proposal_size',
         'total_biaya', 'inovasi_produk', 'tahap', 'status', 'catatan_validator',
     ];
 
@@ -41,6 +42,12 @@ class Pengajuan extends Model
     public function tim()
     {
         return $this->hasMany(PengajuanTim::class);
+    }
+
+    // Alias 'anggotas' agar cocok dengan pemanggilan with(['anggotas']) di controller
+    public function anggotas()
+    {
+        return $this->hasMany(PengajuanTim::class, 'pengajuan_id');
     }
 
     public function anggotaTim()

@@ -14,14 +14,14 @@ class LaporanController extends Controller
 {
     /* ===================== LAPORAN KEMAJUAN ===================== */
 
-    public function kemajuan(Request $request)
+    public function kemajuan()
     {
         $user = Auth::user();
 
         $daftarKegiatan = Pengajuan::with('skema')
             ->where('pegawai_id', $user->id)
+            ->where('jalur', 'simlitabkes')
             ->whereIn('tahap', ['laporan_kemajuan', 'laporan_hasil'])
-            ->orWhere(fn ($q) => $q->where('pegawai_id', $user->id)->where('jalur', 'mandiri'))
             ->latest()
             ->get();
 
@@ -29,25 +29,50 @@ class LaporanController extends Controller
             return view('laporan.kemajuan', ['tanpaKegiatan' => true]);
         }
 
-        $pengajuanId = $request->get('pengajuan_id', $daftarKegiatan->first()->id);
-        $pengajuan = $daftarKegiatan->firstWhere('id', (int) $pengajuanId) ?? $daftarKegiatan->first();
+        $laporanByPengajuan = LaporanKemajuan::whereIn('pengajuan_id', $daftarKegiatan->pluck('id'))
+            ->get()
+            ->keyBy('pengajuan_id');
+
+        return view('laporan.kemajuan', [
+            'daftarKegiatan' => $daftarKegiatan,
+            'laporanByPengajuan' => $laporanByPengajuan,
+        ]);
+    }
+
+    public function kemajuanForm(Pengajuan $pengajuan)
+    {
+        $user = Auth::user();
+        abort_unless($pengajuan->pegawai_id === $user->id, 403);
 
         if ($pengajuan->jalur === 'mandiri') {
-            return view('laporan.kemajuan', [
-                'daftarKegiatan' => $daftarKegiatan,
-                'pengajuan' => $pengajuan,
-                'mandiri' => true,
-            ]);
+            return redirect()->route('laporan.kemajuan')
+                ->with('error', 'Kegiatan jalur Mandiri tidak memerlukan Laporan Kemajuan.');
         }
 
         $pengajuan->load('luaran.luaranMaster');
         $laporan = LaporanKemajuan::where('pengajuan_id', $pengajuan->id)->first();
 
-        return view('laporan.kemajuan', [
-            'daftarKegiatan' => $daftarKegiatan,
+        if ($laporan && in_array($laporan->status, ['disetujui', 'proses'])) {
+            return redirect()->route('laporan.kemajuan.detail', $pengajuan);
+        }
+
+        return view('laporan.kemajuan-form', [
             'pengajuan' => $pengajuan,
             'laporan' => $laporan,
-            'mandiri' => false,
+        ]);
+    }
+
+    public function kemajuanDetail(Pengajuan $pengajuan)
+    {
+        $user = Auth::user();
+        abort_unless($pengajuan->pegawai_id === $user->id, 403);
+
+        $pengajuan->load('luaran.luaranMaster');
+        $laporan = LaporanKemajuan::where('pengajuan_id', $pengajuan->id)->firstOrFail();
+
+        return view('laporan.kemajuan-detail', [
+            'pengajuan' => $pengajuan,
+            'laporan' => $laporan,
         ]);
     }
 
@@ -74,7 +99,6 @@ class LaporanController extends Controller
 
         $data = $request->validate($rules);
 
-        // Persentase dihitung otomatis: jumlah luaran yang dicentang tercapai / total luaran direncanakan
         $totalLuaran = $pengajuan->luaran()->count();
         $luaranTercapai = $data['luaran_tercapai'] ?? [];
         $persentaseOtomatis = $totalLuaran > 0 ? (int) round(count($luaranTercapai) / $totalLuaran * 100) : 0;
@@ -111,7 +135,7 @@ class LaporanController extends Controller
             return redirect()->route('laporan.kemajuan.sukses', $pengajuan);
         }
 
-        return redirect()->route('laporan.kemajuan', ['pengajuan_id' => $pengajuan->id])
+        return redirect()->route('laporan.kemajuan.form', $pengajuan)
             ->with('success', 'Draft berhasil disimpan.');
     }
 
@@ -126,8 +150,8 @@ class LaporanController extends Controller
             'judulHalaman' => 'Laporan Kemajuan',
             'pengajuan' => $pengajuan,
             'laporan' => $laporan,
-            'kembaliUrl' => route('laporan.kemajuan', ['pengajuan_id' => $pengajuan->id]),
-            'kembaliLabel' => 'Kembali ke Laporan Kemajuan',
+            'kembaliUrl' => route('laporan.kemajuan'),
+            'kembaliLabel' => 'Kembali ke Daftar Laporan Kemajuan',
         ]);
     }
 
@@ -146,7 +170,7 @@ class LaporanController extends Controller
             $laporan->save();
         }
 
-        return redirect()->route('laporan.kemajuan', ['pengajuan_id' => $pengajuan->id])
+        return redirect()->route('laporan.kemajuan.form', $pengajuan)
             ->with('success', 'Dokumen kemajuan berhasil dihapus.');
     }
 
@@ -165,7 +189,7 @@ class LaporanController extends Controller
             $laporan->save();
         }
 
-        return redirect()->route('laporan.kemajuan', ['pengajuan_id' => $pengajuan->id])
+        return redirect()->route('laporan.kemajuan.form', $pengajuan)
             ->with('success', 'Dokumentasi berhasil dihapus.');
     }
 
@@ -177,20 +201,24 @@ class LaporanController extends Controller
 
         $user = Auth::user();
 
-        $pengajuanPertama = Pengajuan::where('pegawai_id', $user->id)
+        $daftarKegiatan = Pengajuan::with('skema')
+            ->where('pegawai_id', $user->id)
             ->where('tahap', 'laporan_hasil')
             ->latest()
-            ->first();
+            ->get();
 
-        if (!$pengajuanPertama) {
-            return view('laporan.form', [
-                'tipe' => $tipe,
-                'tanpaKegiatan' => true,
-                'judulHalaman' => 'Laporan Hasil',
-            ]);
+        if ($daftarKegiatan->isEmpty()) {
+            return view('laporan.hasil', ['tanpaKegiatan' => true]);
         }
 
-        return redirect()->route('laporan.form', [$tipe, $pengajuanPertama]);
+        $laporanByPengajuan = LaporanHasil::whereIn('pengajuan_id', $daftarKegiatan->pluck('id'))
+            ->get()
+            ->keyBy('pengajuan_id');
+
+        return view('laporan.hasil', [
+            'daftarKegiatan' => $daftarKegiatan,
+            'laporanByPengajuan' => $laporanByPengajuan,
+        ]);
     }
 
     public function form(string $tipe, Pengajuan $pengajuan)
@@ -204,26 +232,25 @@ class LaporanController extends Controller
             return redirect()->route('laporan.index', $tipe)->with('error', 'Pengajuan ini belum berada di tahap Laporan Hasil.');
         }
 
-        $daftarKegiatan = Pengajuan::where('pegawai_id', $user->id)
-            ->where('tahap', 'laporan_hasil')
-            ->latest()
-            ->get();
-
-        $luaranList = LuaranMaster::where('jenis', $pengajuan->jenis)
-            ->orderByDesc('wajib')
-            ->orderBy('id')
-            ->get();
+        $pengajuan->load('luaran.luaranMaster');
+        $laporan = $pengajuan->laporanHasil;
+        $readonly = $laporan && in_array($laporan->status, ['proses', 'disetujui']);
 
         return view('laporan.form', [
             'tipe' => $tipe,
             'pengajuan' => $pengajuan,
-            'laporan' => $pengajuan->laporanHasil,
-            'daftarKegiatan' => $daftarKegiatan,
-            'luaranList' => $luaranList,
+            'laporan' => $laporan,
+            'luaranList' => $pengajuan->luaran,
+            'readonly' => $readonly,
             'judulHalaman' => 'Laporan Hasil',
         ]);
     }
 
+    /**
+     * Simpan Laporan Hasil. Ringkasan Hasil & Dokumentasi Kegiatan opsional.
+     * Dokumen laporan, Link Inovasi Produk, dan No. SK wajib diisi — tapi
+     * hanya divalidasi wajib saat action=kirim (draft boleh belum lengkap).
+     */
     public function store(Request $request, string $tipe, Pengajuan $pengajuan)
     {
         abort_unless($tipe === 'hasil', 404);
@@ -231,37 +258,53 @@ class LaporanController extends Controller
         $user = Auth::user();
         abort_unless($pengajuan->pegawai_id === $user->id, 403);
 
+        $existing = LaporanHasil::where('pengajuan_id', $pengajuan->id)->first();
+        abort_if(
+            $existing && in_array($existing->status, ['proses', 'disetujui']),
+            403,
+            'Laporan sudah dikirim dan tidak bisa diubah. Hubungi admin untuk membuka akses.'
+        );
+
         $isKirim = $request->input('action') === 'kirim';
 
         $rules = [
             'ringkasan_hasil' => 'nullable|string',
-            'link_inovasi_produk' => 'nullable|string|max:255',
-            'no_sk' => 'nullable|string|max:255',
             'luaran' => 'nullable|array',
             'luaran.*.link' => 'nullable|string|max:500',
             'file' => 'nullable|file|mimes:pdf|max:2048',
             'dokumentasi.*' => 'nullable|image|max:5120',
         ];
+
         if ($isKirim) {
-            $rules['file'] = LaporanHasil::where('pengajuan_id', $pengajuan->id)->whereNotNull('file_path')->exists()
+            $rules['file'] = ($existing && $existing->file_path)
                 ? 'nullable|file|mimes:pdf|max:2048'
                 : 'required|file|mimes:pdf|max:2048';
+            $rules['link_inovasi_produk'] = 'required|string|max:255';
+            $rules['no_sk'] = 'required|string|max:255';
+        } else {
+            $rules['link_inovasi_produk'] = 'nullable|string|max:255';
+            $rules['no_sk'] = 'nullable|string|max:255';
         }
 
         $data = $request->validate($rules);
 
         $luaranTercapai = [];
         foreach ($request->input('luaran', []) as $luaranId => $val) {
-            if (!empty($val['checked'])) {
-                $luaranTercapai[$luaranId] = ['link' => $val['link'] ?? null];
+            $link = trim($val['link'] ?? '');
+            if ($link !== '') {
+                $luaranTercapai[$luaranId] = ['link' => $link];
             }
         }
 
+        $totalLuaran = $pengajuan->luaran()->count();
+        $persentaseOtomatis = $totalLuaran > 0 ? (int) round(count($luaranTercapai) / $totalLuaran * 100) : 0;
+
         $laporan = LaporanHasil::firstOrNew(['pengajuan_id' => $pengajuan->id]);
         $laporan->pengajuan_id = $pengajuan->id;
+        $laporan->persentase = $persentaseOtomatis;
         $laporan->ringkasan_hasil = $data['ringkasan_hasil'] ?? null;
-        $laporan->link_inovasi_produk = $data['link_inovasi_produk'] ?? null;
-        $laporan->no_sk = $data['no_sk'] ?? null;
+        $laporan->link_inovasi_produk = $data['link_inovasi_produk'] ?? $laporan->link_inovasi_produk;
+        $laporan->no_sk = $data['no_sk'] ?? $laporan->no_sk;
         $laporan->luaran_tercapai = $luaranTercapai;
         $laporan->status = $isKirim ? 'proses' : 'draft';
         $laporan->catatan_validator = null;
@@ -315,6 +358,8 @@ class LaporanController extends Controller
 
         $laporan = LaporanHasil::where('pengajuan_id', $pengajuan->id)->first();
 
+        abort_if($laporan && in_array($laporan->status, ['proses', 'disetujui']), 403, 'Laporan sudah dikirim dan tidak bisa diubah.');
+
         if ($laporan && $laporan->file_path) {
             Storage::disk('public')->delete($laporan->file_path);
             $laporan->file_path = null;
@@ -332,6 +377,8 @@ class LaporanController extends Controller
         abort_unless($pengajuan->pegawai_id === $user->id, 403);
 
         $laporan = LaporanHasil::where('pengajuan_id', $pengajuan->id)->first();
+
+        abort_if($laporan && in_array($laporan->status, ['proses', 'disetujui']), 403, 'Laporan sudah dikirim dan tidak bisa diubah.');
 
         if ($laporan && !empty($laporan->dokumentasi[$index])) {
             Storage::disk('public')->delete($laporan->dokumentasi[$index]['path']);

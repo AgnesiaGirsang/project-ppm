@@ -18,6 +18,25 @@ class PengajuanController extends Controller
 {
     const SESSION_KEY = 'wizard_pengajuan';
 
+    /* ===================== DAFTAR PENGAJUAN (TABEL) ===================== */
+
+    /**
+     * Halaman daftar (tabel) seluruh proposal yang pernah diajukan dosen ini.
+     * Dosen hanya bisa melihat detail; hanya bisa mengubah data (Tim, Judul,
+     * Total Biaya, Dokumen Proposal) saat status pengajuan = "revisi".
+     */
+    public function daftar()
+    {
+        $daftarPengajuan = Pengajuan::with('skema')
+            ->where('pegawai_id', Auth::id())
+            ->latest()
+            ->get();
+
+        return view('pengajuan.daftar', [
+            'daftarPengajuan' => $daftarPengajuan,
+        ]);
+    }
+
     private function wizard(): array
     {
         $default = [
@@ -30,12 +49,12 @@ class PengajuanController extends Controller
             'tahun_pengajuan' => date('Y'),
             'tahun_pelaksanaan' => 'I',
             'tahun_capaian' => date('Y'),
-            'anggota' => [], // [['pegawai_id' => int|null, 'nama_external' => string|null, 'institusi_external' => string|null], ...]
+            'anggota' => [],
             'proposal_path' => null,
             'proposal_nama_asli' => null,
             'proposal_size' => null,
             'total_biaya' => null,
-            'luaran_wajib_opsi' => null,
+            'luaran_wajib' => [],
             'luaran_tambahan' => [],
             'inovasi_produk' => null,
         ];
@@ -227,28 +246,42 @@ class PengajuanController extends Controller
         }
 
         $w = $this->wizard();
-        $luaranWajib = LuaranMaster::where('jenis', $w['jenis'])->where('wajib', true)->first();
-        $luaranTambahan = LuaranMaster::where('jenis', $w['jenis'])->where('wajib', false)->orderBy('id')->get();
+        $luarans = LuaranMaster::where('jenis', $w['jenis'])->orderBy('id')->get();
 
         return view('pengajuan.step4', [
             'w' => $w,
-            'luaranWajib' => $luaranWajib,
-            'luaranTambahan' => $luaranTambahan,
+            'luarans' => $luarans,
         ]);
     }
 
     public function postStep4(Request $request)
     {
         $data = $request->validate([
-            'luaran_wajib_opsi' => 'nullable|string',
+            'luaran_wajib' => 'required|array|min:1',
+            'luaran_wajib.*' => 'exists:luaran_masters,id',
+            'luaran_wajib_opsi' => 'nullable|array',
             'luaran_tambahan' => 'nullable|array',
-            'luaran_tambahan.*' => 'nullable|string',
+            'luaran_tambahan.*' => 'exists:luaran_masters,id',
+            'luaran_tambahan_opsi' => 'nullable|array',
             'inovasi_produk' => 'nullable|string',
+        ], [
+            'luaran_wajib.required' => 'Pilih minimal 1 luaran wajib.',
+            'luaran_wajib.min' => 'Pilih minimal 1 luaran wajib.',
         ]);
 
+        $wajib = [];
+        foreach ($data['luaran_wajib'] as $id) {
+            $wajib[$id] = $data['luaran_wajib_opsi'][$id] ?? null;
+        }
+
+        $tambahan = [];
+        foreach ($data['luaran_tambahan'] ?? [] as $id) {
+            $tambahan[$id] = $data['luaran_tambahan_opsi'][$id] ?? null;
+        }
+
         $this->saveWizard([
-            'luaran_wajib_opsi' => $data['luaran_wajib_opsi'] ?? null,
-            'luaran_tambahan' => $data['luaran_tambahan'] ?? [],
+            'luaran_wajib' => $wajib,
+            'luaran_tambahan' => $tambahan,
             'inovasi_produk' => $data['inovasi_produk'] ?? null,
         ]);
 
@@ -279,7 +312,7 @@ class PengajuanController extends Controller
             'rumpunIlmu' => $w['rumpun_ilmu_id'] ? RumpunIlmu::find($w['rumpun_ilmu_id']) : null,
             'anggotaTim' => Pegawai::whereIn('id', $pegawaiIds)->get(),
             'anggotaLuar' => $anggotaLuar,
-            'luaranWajib' => LuaranMaster::where('jenis', $w['jenis'])->where('wajib', true)->first(),
+            'luaranWajibDipilih' => LuaranMaster::whereIn('id', array_keys($w['luaran_wajib']))->get(),
             'luaranTambahanDipilih' => LuaranMaster::whereIn('id', array_keys($w['luaran_tambahan']))->get(),
         ]);
     }
@@ -339,12 +372,12 @@ class PengajuanController extends Controller
                 }
             }
 
-            $luaranWajib = LuaranMaster::where('jenis', $w['jenis'])->where('wajib', true)->first();
-            if ($luaranWajib) {
+            foreach ($w['luaran_wajib'] as $luaranMasterId => $opsi) {
                 PengajuanLuaran::create([
                     'pengajuan_id' => $pengajuan->id,
-                    'luaran_master_id' => $luaranWajib->id,
-                    'opsi_dipilih' => $w['luaran_wajib_opsi'],
+                    'luaran_master_id' => $luaranMasterId,
+                    'opsi_dipilih' => $opsi ?: null,
+                    'is_wajib' => true,
                 ]);
             }
 
@@ -353,6 +386,7 @@ class PengajuanController extends Controller
                     'pengajuan_id' => $pengajuan->id,
                     'luaran_master_id' => $luaranMasterId,
                     'opsi_dipilih' => $opsi ?: null,
+                    'is_wajib' => false,
                 ]);
             }
 

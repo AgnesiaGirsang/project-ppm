@@ -6,6 +6,34 @@
 @section('content')
     <link rel="stylesheet" href="{{ asset('css/wizard.css') }}">
 
+    <style>
+        .s3-section-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 800;
+            font-size: 13.5px;
+            color: #111827;
+            margin-bottom: 12px;
+        }
+
+        .s3-section-title .ic {
+            width: 26px;
+            height: 26px;
+            border-radius: 8px;
+            background: #e6f4ee;
+            color: #00875A;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .s3-section-title .ic svg {
+            width: 13px;
+            height: 13px;
+        }
+    </style>
+
     <div class="card wizard-card">
         @include('pengajuan._stepper', ['current' => 3])
 
@@ -16,9 +44,20 @@
         <form method="POST" action="{{ route('pengajuan.step3.post') }}" enctype="multipart/form-data">
             @csrf
 
+            <div class="s3-section-title">
+                <span class="ic">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                        <polyline points="14 2 14 8 20 8" />
+                    </svg>
+                </span>
+                Dokumen & Anggaran
+            </div>
+
             <div class="field">
                 <label>Dokumen Proposal</label>
-                <div class="sub" style="margin-bottom:10px; font-size:11.5px; color:var(--ink-500);">Unggah proposal dalam
+                <div class="sub" style="margin-bottom:10px; font-size:11.5px; color:var(--ink-500);">Unggah proposal
+                    dalam
                     format PDF, ukuran maksimal 2 MB.</div>
 
                 <label for="proposalInput" style="display:block;">

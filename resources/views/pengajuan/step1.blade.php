@@ -6,6 +6,114 @@
 @section('content')
     <link rel="stylesheet" href="{{ asset('css/wizard.css') }}">
 
+    <style>
+        .s1-jenis-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 6px;
+        }
+
+        @media (max-width: 640px) {
+            .s1-jenis-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .s1-jenis-card {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border: 1.5px solid #e2ece7;
+            border-radius: 12px;
+            padding: 14px 16px;
+            cursor: pointer;
+            position: relative;
+            transition: border-color .15s ease, background .15s ease, box-shadow .15s ease;
+            background: #fff;
+        }
+
+        .s1-jenis-card:hover {
+            border-color: #a9d9c6;
+            background: #f7fbf9;
+        }
+
+        .s1-jenis-card:has(input:checked) {
+            border-color: #00875A;
+            background: #f4fbf7;
+            box-shadow: 0 0 0 3px rgba(0, 135, 90, .12);
+        }
+
+        .s1-jenis-card input {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .s1-jenis-ic {
+            flex-shrink: 0;
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            background: #eef2f0;
+            color: #6b7280;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background .15s ease, color .15s ease;
+        }
+
+        .s1-jenis-card:has(input:checked) .s1-jenis-ic {
+            background: #00875A;
+            color: #fff;
+        }
+
+        .s1-jenis-ic svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .s1-jenis-text b {
+            display: block;
+            font-size: 13.5px;
+            color: #111827;
+            font-weight: 700;
+        }
+
+        .s1-jenis-text span {
+            font-size: 11.5px;
+            color: #6b7280;
+        }
+
+        .s1-jalur-ic {
+            width: 30px;
+            height: 30px;
+            border-radius: 8px;
+            background: #e6f4ee;
+            color: #00875A;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
+        .s1-jalur-ic svg {
+            width: 15px;
+            height: 15px;
+        }
+
+        .s1-section-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 800;
+            font-size: 13.5px;
+            color: #111827;
+            margin-bottom: 8px;
+        }
+    </style>
+
     <div class="card wizard-card">
         @include('pengajuan._stepper', ['current' => 1])
 
@@ -17,27 +125,57 @@
             @csrf
 
             <div class="field">
-                <label>Jenis Kegiatan</label>
-                <label class="radio-opt">
-                    <input type="radio" name="jenis" value="penelitian"
-                        {{ $w['jenis'] === 'penelitian' ? 'checked' : '' }} required>
-                    Penelitian
-                </label>
-                <label class="radio-opt">
-                    <input type="radio" name="jenis" value="pengabdian"
-                        {{ $w['jenis'] === 'pengabdian' ? 'checked' : '' }}>
-                    Pengabdian kepada Masyarakat
-                </label>
+                <div class="s1-section-title">Jenis Kegiatan</div>
+                <div class="s1-jenis-grid">
+                    <label class="s1-jenis-card">
+                        <input type="radio" name="jenis" value="penelitian"
+                            {{ $w['jenis'] === 'penelitian' ? 'checked' : '' }} required>
+                        <div class="s1-jenis-ic">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M9 3v14" />
+                                <path d="M15 7v10" />
+                                <path d="M4 21h16" />
+                                <path d="M6 21V9a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v12" />
+                            </svg>
+                        </div>
+                        <div class="s1-jenis-text"><b>Penelitian</b><span>Kegiatan riset ilmiah</span></div>
+                    </label>
+                    <label class="s1-jenis-card">
+                        <input type="radio" name="jenis" value="pengabdian"
+                            {{ $w['jenis'] === 'pengabdian' ? 'checked' : '' }}>
+                        <div class="s1-jenis-ic">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                                <circle cx="9" cy="7" r="4" />
+                                <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                            </svg>
+                        </div>
+                        <div class="s1-jenis-text"><b>Pengabdian kepada Masyarakat</b><span>Kegiatan berbasis
+                                mitra/komunitas</span></div>
+                    </label>
+                </div>
             </div>
 
-            <div class="field"><label>Jalur Pengajuan</label></div>
+            <div class="field" style="margin-top:16px;">
+                <div class="s1-section-title">Jalur Pengajuan</div>
+            </div>
             <div class="jalur-grid">
                 <div class="jalur-card {{ $w['jalur'] === 'simlitabkes' ? 'sel' : '' }}"
                     onclick="pickJalur(this,'simlitabkes')">
                     <input type="radio" name="jalur" value="simlitabkes"
                         {{ $w['jalur'] === 'simlitabkes' ? 'checked' : '' }} required style="display:none;">
-                    <div class="hd"><b>Simlitabkes</b><span class="tag"
-                            style="background:var(--green-bg); color:var(--green-txt);">3 Tahap</span></div>
+                    <div class="hd">
+                        <span class="s1-jalur-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M9 11l3 3L22 4" />
+                                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+                            </svg></span>
+                        <b>Simlitabkes</b><span class="tag" style="background:var(--green-bg); color:var(--green-txt);">3
+                            Tahap</span>
+                    </div>
                     <div class="steps-mini"><span><span class="n">1</span>Proposal</span>→<span><span
                                 class="n">2</span>Kemajuan</span>→<span><span class="n">3</span>Hasil</span></div>
                     <p>Wajib melalui 3 tahapan berurutan: Proposal, Laporan Kemajuan, dan Laporan Hasil. Setiap tahap harus
@@ -46,8 +184,15 @@
                 <div class="jalur-card {{ $w['jalur'] === 'mandiri' ? 'sel' : '' }}" onclick="pickJalur(this,'mandiri')">
                     <input type="radio" name="jalur" value="mandiri" {{ $w['jalur'] === 'mandiri' ? 'checked' : '' }}
                         style="display:none;">
-                    <div class="hd"><b>Mandiri</b><span class="tag" style="background:#eee6fb; color:#6b3fc2;">2
-                            Tahap</span></div>
+                    <div class="hd">
+                        <span class="s1-jalur-ic" style="background:#eee6fb; color:#6b3fc2;"><svg viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z" />
+                            </svg></span>
+                        <b>Mandiri</b><span class="tag" style="background:#eee6fb; color:#6b3fc2;">2
+                            Tahap</span>
+                    </div>
                     <div class="steps-mini"><span><span class="n">1</span>Proposal</span>→<span><span
                                 class="n">2</span>Hasil</span></div>
                     <p>Hanya perlu memenuhi 2 tahapan: Proposal dan Laporan Hasil. Laporan Kemajuan tidak diperlukan pada

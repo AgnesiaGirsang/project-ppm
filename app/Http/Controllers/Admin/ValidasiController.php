@@ -8,31 +8,40 @@ use App\Models\Pengajuan;
 use App\Models\LaporanKemajuan;
 use App\Models\LaporanHasil;
 use App\Models\Notification;
+use App\Models\ActivityLog; // <-- Jangan lupa import Model ActivityLog
 
 class ValidasiController extends Controller
 {
     // ==========================================
     // BAGIAN: VALIDASI PROPOSAL
     // ==========================================
-    public function index()
+    public function index(Request $request)
     {
         $title = 'Daftar Validasi Proposal';
 
-        $pengajuans = Pengajuan::with(['pegawai', 'skema', 'rumpunIlmu'])
-            ->where('status', 'proses')
-            ->latest()
-            ->paginate(10);
+        $query = Pengajuan::with(['pegawai', 'skema', 'rumpunIlmu']);
 
-        return view('admin.validasi.proposal', compact('title', 'pengajuans'));
+        // Fitur Sorting Terbaru / Terlama (Default: Terbaru)
+        $sort = $request->get('sort', 'latest');
+        if ($sort == 'oldest') {
+            $query->oldest();
+        } else {
+            $query->latest();
+        }
+
+        $pengajuans = $query->paginate(10)->withQueryString();
+
+        return view('Admin.validasi.proposal', compact('title', 'pengajuans'));
     }
 
     public function proposal($id)
     {
         $title = 'Validasi Proposal';
 
-        $selected = Pengajuan::with(['pegawai', 'skema', 'rumpunIlmu', 'tim.pegawai', 'luaran'])->findOrFail($id);
+        $pengajuan = Pengajuan::with(['pegawai', 'skema', 'rumpunIlmu', 'tim.pegawai', 'luaran'])->findOrFail($id);
+        $selected = $pengajuan;
 
-        return view('admin.validasi.proposal_detail', compact('title', 'selected'));
+        return view('Admin.validasi.proposal_detail', compact('title', 'pengajuan', 'selected'));
     }
 
     public function updateValidasi(Request $request, $id)
@@ -51,21 +60,28 @@ class ValidasiController extends Controller
             'catatan_validator' => $request->catatan,
         ];
 
-        // Kalau proposal disetujui, majukan tahap ke laporan_kemajuan
-        // supaya muncul di halaman Laporan Kemajuan milik dosen.
+        // Jalur Mandiri hanya punya 2 tahap (Proposal -> Laporan Hasil),
+        // jadi begitu disetujui langsung lompat ke laporan_hasil, skip laporan_kemajuan.
         if ($statusBaru === 'disetujui') {
-            $dataUpdate['tahap'] = 'laporan_kemajuan';
+            $dataUpdate['tahap'] = $pengajuan->jalur === 'mandiri' ? 'laporan_hasil' : 'laporan_kemajuan';
         }
 
         $pengajuan->update($dataUpdate);
 
-        // Kirim notifikasi ke dosen pemilik pengajuan
+        // Catat Aktivitas ke Activity Log
+        ActivityLog::create([
+            'user_id'   => auth()->id(),
+            'aktivitas' => 'Melakukan validasi proposal "' . $pengajuan->judul . '" dengan hasil: ' . strtoupper($statusBaru),
+            'tipe'      => 'validasi'
+        ]);
+
         Notification::create([
             'user_id' => $pengajuan->pegawai_id,
             'type' => 'validasi',
             'title' => $statusBaru === 'disetujui' ? 'Proposal Disetujui' : 'Proposal Perlu Direvisi',
             'message' => $statusBaru === 'disetujui'
-                ? 'Proposal "' . $pengajuan->judul . '" telah disetujui. Silakan lanjutkan ke tahap Laporan Kemajuan.'
+                ? ('Proposal "' . $pengajuan->judul . '" telah disetujui. Silakan lanjutkan ke tahap '
+                    . ($pengajuan->jalur === 'mandiri' ? 'Laporan Hasil.' : 'Laporan Kemajuan.'))
                 : 'Proposal "' . $pengajuan->judul . '" perlu direvisi. Silakan cek catatan validator.',
         ]);
 
@@ -76,26 +92,32 @@ class ValidasiController extends Controller
     // ==========================================
     // BAGIAN: VALIDASI LAPORAN KEMAJUAN
     // ==========================================
-    public function kemajuanIndex()
+    public function kemajuanIndex(Request $request)
     {
         $title = 'Daftar Validasi Laporan Kemajuan';
 
-        // Menggunakan LaporanKemajuan beserta relasinya
-        $laporans = LaporanKemajuan::with(['pengajuan.pegawai', 'pengajuan.skema'])
-            ->latest()
-            ->paginate(10);
+        $query = LaporanKemajuan::with(['pengajuan.pegawai', 'pengajuan.skema']);
 
-        return view('admin.validasi.laporan_kemajuan', compact('title', 'laporans'));
+        $sort = $request->get('sort', 'latest');
+        if ($sort == 'oldest') {
+            $query->oldest();
+        } else {
+            $query->latest();
+        }
+
+        $laporans = $query->paginate(10)->withQueryString();
+
+        return view('Admin.validasi.laporan_kemajuan', compact('title', 'laporans'));
     }
 
     public function kemajuanDetail($id)
     {
         $title = 'Validasi Laporan Kemajuan';
 
-        // Mencari data laporan kemajuan beserta relasi pengajuan dan pegawai
-        $selected = LaporanKemajuan::with(['pengajuan.pegawai', 'pengajuan.skema'])->findOrFail($id);
+        $laporan = LaporanKemajuan::with(['pengajuan.pegawai', 'pengajuan.skema'])->findOrFail($id);
+        $selected = $laporan;
 
-        return view('admin.validasi.laporan_kemajuan_detail', compact('title', 'selected'));
+        return view('Admin.validasi.laporan_kemajuan_detail', compact('title', 'laporan', 'selected'));
     }
 
     public function kemajuanUpdate(Request $request, $id)
@@ -109,28 +131,34 @@ class ValidasiController extends Controller
 
         $statusBaru = $request->keputusan == 'setuju' ? 'disetujui' : 'revisi';
 
-        // Memperbarui status dan catatan pada tabel laporan_kemajuan
         $laporan->update([
             'status' => $statusBaru,
             'catatan_validator' => $request->catatan
         ]);
 
-        // Kalau laporan kemajuan disetujui, majukan tahap pengajuan
-        // ke laporan_hasil supaya muncul di halaman Laporan Hasil milik dosen.
-        if ($statusBaru === 'disetujui') {
-            $laporan->pengajuan()->update(['tahap' => 'laporan_hasil']);
+        $pengajuan = $laporan->pengajuan;
+        if ($statusBaru === 'disetujui' && $pengajuan) {
+            $pengajuan->update(['tahap' => 'laporan_hasil']);
         }
 
-        // Kirim notifikasi ke dosen pemilik laporan
-        $pengajuan = $laporan->pengajuan;
-        Notification::create([
-            'user_id' => $pengajuan->pegawai_id,
-            'type' => 'laporan',
-            'title' => $statusBaru === 'disetujui' ? 'Laporan Kemajuan Disetujui' : 'Laporan Kemajuan Perlu Direvisi',
-            'message' => $statusBaru === 'disetujui'
-                ? 'Laporan kemajuan untuk "' . $pengajuan->judul . '" telah disetujui. Silakan lanjutkan ke tahap Laporan Hasil.'
-                : 'Laporan kemajuan untuk "' . $pengajuan->judul . '" perlu direvisi. Silakan cek catatan validator.',
+        // Catat Aktivitas ke Activity Log
+        $judulPengajuan = $pengajuan->judul ?? 'Laporan Kemajuan';
+        ActivityLog::create([
+            'user_id'   => auth()->id(),
+            'aktivitas' => 'Melakukan validasi laporan kemajuan untuk "' . $judulPengajuan . '" dengan hasil: ' . strtoupper($statusBaru),
+            'tipe'      => 'validasi'
         ]);
+
+        if ($pengajuan) {
+            Notification::create([
+                'user_id' => $pengajuan->pegawai_id,
+                'type' => 'laporan_kemajuan',
+                'title' => $statusBaru === 'disetujui' ? 'Laporan Kemajuan Disetujui' : 'Laporan Kemajuan Perlu Direvisi',
+                'message' => $statusBaru === 'disetujui'
+                    ? 'Laporan kemajuan untuk "' . $pengajuan->judul . '" telah disetujui. Silakan lanjutkan ke tahap Laporan Hasil.'
+                    : 'Laporan kemajuan untuk "' . $pengajuan->judul . '" perlu direvisi. Silakan cek catatan validator.',
+            ]);
+        }
 
         return redirect()->route('admin.validasi.laporan-kemajuan')->with('success', 'Keputusan laporan kemajuan berhasil dikirim!');
     }
@@ -139,24 +167,32 @@ class ValidasiController extends Controller
     // ==========================================
     // BAGIAN: VALIDASI LAPORAN HASIL
     // ==========================================
-    public function hasilIndex()
+    public function hasilIndex(Request $request)
     {
         $title = 'Daftar Validasi Laporan Hasil';
 
-        $laporans = LaporanHasil::with(['pengajuan.pegawai', 'pengajuan.skema'])
-            ->latest()
-            ->paginate(10);
+        $query = LaporanHasil::with(['pengajuan.pegawai', 'pengajuan.skema']);
 
-        return view('admin.validasi.laporan_hasil', compact('title', 'laporans'));
+        $sort = $request->get('sort', 'latest');
+        if ($sort == 'oldest') {
+            $query->oldest();
+        } else {
+            $query->latest();
+        }
+
+        $laporans = $query->paginate(10)->withQueryString();
+
+        return view('Admin.validasi.laporan_hasil', compact('title', 'laporans'));
     }
 
     public function hasilDetail($id)
     {
         $title = 'Validasi Laporan Hasil';
 
-        $selected = LaporanHasil::with(['pengajuan.pegawai', 'pengajuan.skema'])->findOrFail($id);
+        $laporan = LaporanHasil::with(['pengajuan.pegawai', 'pengajuan.skema'])->findOrFail($id);
+        $selected = $laporan;
 
-        return view('admin.validasi.laporan_hasil_detail', compact('title', 'selected'));
+        return view('Admin.validasi.laporan_hasil_detail', compact('title', 'laporan', 'selected'));
     }
 
     public function hasilUpdate(Request $request, $id)
@@ -175,8 +211,16 @@ class ValidasiController extends Controller
             'catatan_validator' => $request->catatan
         ]);
 
-        // Kirim notifikasi ke dosen pemilik laporan
         $pengajuan = $laporan->pengajuan;
+
+        // Catat Aktivitas ke Activity Log
+        $judulPengajuan = $pengajuan->judul ?? 'Laporan Hasil';
+        ActivityLog::create([
+            'user_id'   => auth()->id(),
+            'aktivitas' => 'Melakukan validasi laporan hasil untuk "' . $judulPengajuan . '" dengan hasil: ' . strtoupper($statusBaru),
+            'tipe'      => 'validasi'
+        ]);
+
         Notification::create([
             'user_id' => $pengajuan->pegawai_id,
             'type' => 'laporan',

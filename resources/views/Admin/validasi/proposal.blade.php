@@ -1,82 +1,149 @@
 @extends('layouts.admin')
 
-@section('title', 'Daftar Validasi Proposal - SIPPM')
+@section('title', 'Daftar Validasi Proposal - SIPPM Poltekkes Kemenkes Medan')
 @section('header_title', 'Validasi Proposal')
 @section('header_breadcrumb', 'Menu Admin / Validasi / Proposal')
 
 @section('content')
-@if(session('success'))
-<div class="bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 rounded-xl mb-4 text-xs font-bold flex items-center gap-2">
-    <i class="fa-solid fa-circle-check text-base"></i> {{ session('success') }}
-</div>
-@endif
+    <div class="space-y-6">
 
-<div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-5 space-y-4">
-    <div class="flex justify-between items-center border-b border-slate-100 pb-3">
-        <div>
-            <h3 class="font-extrabold text-slate-900 text-xs uppercase tracking-wide">Daftar Berkas Masuk</h3>
-            <p class="text-[11px] text-slate-400">Pilih berkas yang ingin divalidasi melalui tombol aksi di tabel bawah.</p>
+        <!-- RINGKASAN STATISTIK KECIL -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-2xs flex items-center justify-between">
+                <div>
+                    <p class="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider">Total Berkas Masuk</p>
+                    <h4 class="text-xl font-extrabold text-slate-800 mt-1">{{ $pengajuans->total() }} <span
+                            class="text-xs font-medium text-slate-500">Berkas</span></h4>
+                </div>
+                <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-800 flex items-center justify-center font-bold">
+                    <i class="fa-solid fa-folder-open text-sm"></i>
+                </div>
+            </div>
         </div>
-        <span class="text-xs font-bold bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full border border-emerald-200">
-            Total Masuk: {{ $pengajuans->total() }} Berkas
-        </span>
-    </div>
 
-    <div class="overflow-x-auto">
-        <table class="w-full text-left border-collapse text-xs">
-            <thead>
-                <tr class="bg-slate-50 text-slate-500 uppercase tracking-wider text-[10px] border-b border-slate-200">
-                    <th class="py-3 px-4">No</th>
-                    <th class="py-3 px-4">Judul Proposal & Skema</th>
-                    <th class="py-3 px-4">Pengusul / Ketua</th>
-                    <th class="py-3 px-4">Tanggal Masuk</th>
-                    <th class="py-3 px-4 text-center">Status</th>
-                    <th class="py-3 px-4 text-center">Aksi</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-100 text-slate-700 font-medium">
-                @forelse($pengajuans as $index => $item)
-                <tr class="hover:bg-slate-50/80 transition">
-                    <td class="py-3.5 px-4 text-slate-400 font-bold">{{ $pengajuans->firstItem() + $index }}</td>
-                    <td class="py-3.5 px-4 max-w-xs">
-                        <span class="font-bold text-slate-900 block leading-snug">{{ $item->judul }}</span>
-                        <span class="text-[10px] text-emerald-700 font-semibold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 inline-block mt-1">
-                            {{ $item->skema->nama ?? 'Skema Tidak Ada' }}
-                        </span>
-                    </td>
-                    <td class="py-3.5 px-4">
-                        <!-- Mengambil nama dan nip dari relasi pegawai (atau user) secara aman -->
-                        <span class="font-bold block text-slate-800">{{ $item->pegawai->nama ?? $item->user->name ?? 'Tidak Diketahui' }}</span>
-                        <span class="text-[10px] text-slate-400">NIP/NIDN: {{ $item->pegawai->nip ?? $item->pegawai->nidn ?? '-' }}</span>
-                    </td>
-                    <td class="py-3.5 px-4 text-slate-600">
-                        {{ $item->created_at ? $item->created_at->format('d/m/Y H:i') : '-' }}
-                    </td>
-                    <td class="py-3.5 px-4 text-center">
-                        <span class="bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-bold px-2.5 py-1 rounded-md inline-block">
-                            {{ ucfirst($item->status) }}
-                        </span>
-                    </td>
-                    <td class="py-3.5 px-4 text-center">
-                        <a href="{{ route('admin.validasi.proposal.detail', $item->id) }}" class="bg-[#022c22] hover:bg-emerald-900 text-white font-bold px-3.5 py-2 rounded-xl transition shadow-xs inline-flex items-center gap-1.5 text-[11px]">
-                            <i class="fa-solid fa-magnifying-glass"></i> Validasi
-                        </a>
-                    </td>
-                </tr>
-                @empty
-                <tr>
-                    <td colspan="6" class="text-center py-8 text-slate-400 italic">
-                        Tidak ada berkas proposal baru yang perlu divalidasi saat ini.
-                    </td>
-                </tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
+        <!-- KONTROL UTAMA & TABEL -->
+        <div class="bg-white rounded-2xl shadow-xs border border-slate-200 overflow-hidden">
 
-    <!-- Paginasi -->
-    <div class="mt-4">
-        {{ $pengajuans->links() }}
+            <!-- HEADER KARTU & FILTER URUTAN -->
+            <div class="p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h3 class="text-sm font-extrabold text-slate-900 uppercase tracking-wider">
+                        Daftar Berkas & Riwayat Validasi Proposal
+                    </h3>
+                    <p class="text-xs text-slate-500 mt-0.5">Kelola, verifikasi, dan pantau status kelayakan proposal
+                        penelitian/pengabdian.</p>
+                </div>
+
+                <!-- DROPDOWN SORTING -->
+                <form method="GET" action="{{ route('admin.validasi.proposal') }}" class="flex items-center gap-2.5">
+                    <span class="text-xs font-bold text-slate-500 shrink-0">Urutkan:</span>
+                    <select name="sort" onchange="this.form.submit()"
+                        class="text-xs border border-slate-200 rounded-xl px-3.5 py-2 bg-slate-50/50 font-semibold text-slate-700 focus:outline-none focus:border-emerald-700 transition shadow-2xs">
+                        <option value="latest" {{ request('sort') == 'latest' ? 'selected' : '' }}>Terbaru (Paling Baru)
+                        </option>
+                        <option value="oldest" {{ request('sort') == 'oldest' ? 'selected' : '' }}>Terlama (Paling Lama)
+                        </option>
+                    </select>
+                </form>
+            </div>
+
+            <!-- TABEL DATA -->
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr
+                            class="bg-slate-50/75 border-b border-slate-200 text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">
+                            <th class="py-3.5 px-6 w-16 text-center">No</th>
+                            <th class="py-3.5 px-6">Judul Proposal & Skema</th>
+                            <th class="py-3.5 px-6">Pengusul / Ketua</th>
+                            <th class="py-3.5 px-6">Tanggal Masuk</th>
+                            <th class="py-3.5 px-6">Status Validasi</th>
+                            <th class="py-3.5 px-6 text-center">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 text-xs font-medium text-slate-700">
+                        @forelse($pengajuans as $index => $item)
+                            <tr class="hover:bg-slate-50/80 transition group">
+                                <!-- NOMOR -->
+                                <td class="py-4 px-6 text-center font-bold text-slate-400">
+                                    {{ $pengajuans->firstItem() + $index }}
+                                </td>
+
+                                <!-- JUDUL & SKEMA -->
+                                <td class="py-4 px-6 max-w-xs">
+                                    <span
+                                        class="font-extrabold text-slate-900 block leading-relaxed line-clamp-2 group-hover:text-emerald-900 transition">
+                                        {{ $item->judul }}
+                                    </span>
+                                    <span
+                                        class="inline-flex items-center gap-1.5 mt-1.5 px-2.5 py-0.5 rounded-md text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200/60">
+                                        <i class="fa-solid fa-bookmark text-[9px]"></i> {{ $item->skema->nama ?? '-' }}
+                                    </span>
+                                </td>
+
+                                <!-- PENGUSUL -->
+                                <td class="py-4 px-6">
+                                    <span class="font-bold text-slate-900 block">{{ $item->pegawai->nama ?? '-' }}</span>
+                                    <span class="text-[11px] text-slate-400 font-mono mt-0.5 block">NIP/NIDN:
+                                        {{ $item->pegawai->nip ?? '-' }}</span>
+                                </td>
+
+                                <!-- TANGGAL MASUK -->
+                                <td class="py-4 px-6 text-slate-600 whitespace-nowrap">
+                                    <div class="flex items-center gap-1.5 font-semibold">
+                                        <i class="fa-regular fa-clock text-slate-400"></i>
+                                        {{ $item->created_at ? $item->created_at->format('d/m/Y H:i') : '-' }}
+                                    </div>
+                                </td>
+
+                                <!-- STATUS BADGE -->
+                                <td class="py-4 px-6 whitespace-nowrap">
+                                    @if ($item->status == 'disetujui')
+                                        <span
+                                            class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span> Disetujui
+                                        </span>
+                                    @elseif($item->status == 'revisi')
+                                        <span
+                                            class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-rose-50 text-rose-700 border border-rose-200">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-rose-600"></span> Revisi
+                                        </span>
+                                    @else
+                                        <span
+                                            class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-amber-50 text-amber-700 border border-amber-200">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span> Proses
+                                        </span>
+                                    @endif
+                                </td>
+
+                                <!-- TOMBOL AKSI (VALIDASI) -->
+                                <td class="py-4 px-6 text-center whitespace-nowrap">
+                                    <a href="{{ route('admin.validasi.proposal.detail', $item->id) }}"
+                                        class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-white bg-emerald-800 hover:bg-emerald-900 transition shadow-2xs group-hover:shadow-sm">
+                                        <i class="fa-solid fa-clipboard-check text-[11px]"></i> Validasi
+                                    </a>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="6" class="text-center py-12 text-slate-400 italic">
+                                    <div class="flex flex-col items-center justify-center space-y-2">
+                                        <i class="fa-regular fa-folder-open text-3xl text-slate-300"></i>
+                                        <p>Belum ada data pengajuan proposal yang masuk.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- PAGINATION -->
+            <div class="p-6 border-t border-slate-100 bg-slate-50/50">
+                {{ $pengajuans->links() }}
+            </div>
+
+        </div>
+
     </div>
-</div>
 @endsection

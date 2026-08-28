@@ -41,7 +41,6 @@
             </div>
             <h1>Login Portal Admin</h1>
             <div class="sub">Masukkan kredensial Anda untuk mengakses<br>dashboard sistem admin.</div>
-
             {{-- Menampilkan pesan error jika NIP/password salah --}}
             @if ($errors->any())
                 <div class="login-alert"
@@ -49,7 +48,6 @@
                     {{ $errors->first() }}
                 </div>
             @endif
-
             <form method="POST" action="{{ route('admin.login.submit') }}">
                 @csrf
                 <div class="field">
@@ -59,7 +57,6 @@
                             value="{{ old('nip') }}" autocomplete="username" required>
                     </div>
                 </div>
-
                 <div class="field">
                     <div class="field-row-label">
                         <label style="margin-bottom:0;">KATA SANDI</label>
@@ -72,15 +69,14 @@
                             autocomplete="current-password" required>
                     </div>
                 </div>
-
                 <label class="admin-remember">
                     <input type="checkbox" name="remember" checked> Ingat perangkat ini
                 </label>
-
                 <button class="btn btn-primary btn-custom-green" type="submit">Masuk Sekarang</button>
             </form>
-
+            <a href="{{ route('login') }}" class="admin-login-back">&larr; Kembali ke Halaman Login Dosen</a>
         </div>
+    </div>
 </body>
 
 </html>

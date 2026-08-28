@@ -10,7 +10,7 @@ class LaporanKemajuan extends Model
 
     protected $fillable = [
         'pengajuan_id', 'persentase', 'file_path', 'file_nama_asli', 'file_size',
-        'dokumentasi', 'kegiatan_dilakukan', 'kendala', 'rencana_berikutnya',
+        'dokumentasi', 'kegiatan_dilakukan', 'kendala', 'rencana_berikutnya', 'komentar',
         'luaran_tercapai', 'status', 'catatan_validator',
     ];
 
@@ -31,9 +31,9 @@ class LaporanKemajuan extends Model
     {
         return match ($this->status) {
             'draft' => ['Draft', 'b-menunggu'],
-            'proses' => ['Dalam Proses', 'b-menunggu'],
+            'proses' => ['Menunggu Validasi', 'b-menunggu'],
             'disetujui' => ['Disetujui', 'b-disetujui'],
-            'revisi' => ['Direvisi', 'b-revisi'],
+            'revisi' => ['Perlu Direvisi', 'b-revisi'],
             default => [$this->status, 'b-menunggu'],
         };
     }

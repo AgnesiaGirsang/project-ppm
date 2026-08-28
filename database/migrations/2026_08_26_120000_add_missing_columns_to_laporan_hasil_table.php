@@ -9,24 +9,56 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('laporan_hasil', function (Blueprint $table) {
-            $table->text('ringkasan_hasil')->nullable()->after('pengajuan_id');
-            $table->string('link_inovasi_produk')->nullable()->after('file_size');
-            $table->string('no_sk')->nullable()->after('link_inovasi_produk');
-            $table->json('luaran_tercapai')->nullable()->after('no_sk');
-            $table->json('dokumentasi')->nullable()->after('luaran_tercapai');
+
+            if (!Schema::hasColumn('laporan_hasil', 'ringkasan_hasil')) {
+                $table->text('ringkasan_hasil')
+                    ->nullable()
+                    ->after('pengajuan_id');
+            }
+
+            if (!Schema::hasColumn('laporan_hasil', 'link_inovasi_produk')) {
+                $table->string('link_inovasi_produk')
+                    ->nullable()
+                    ->after('file_size');
+            }
+
+            if (!Schema::hasColumn('laporan_hasil', 'no_sk')) {
+                $table->string('no_sk')
+                    ->nullable()
+                    ->after('link_inovasi_produk');
+            }
+
+            if (!Schema::hasColumn('laporan_hasil', 'luaran_tercapai')) {
+                $table->json('luaran_tercapai')
+                    ->nullable()
+                    ->after('no_sk');
+            }
+
+            if (!Schema::hasColumn('laporan_hasil', 'dokumentasi')) {
+                $table->json('dokumentasi')
+                    ->nullable()
+                    ->after('luaran_tercapai');
+            }
         });
     }
 
     public function down(): void
     {
         Schema::table('laporan_hasil', function (Blueprint $table) {
-            $table->dropColumn([
+
+            $columns = [
                 'ringkasan_hasil',
                 'link_inovasi_produk',
                 'no_sk',
                 'luaran_tercapai',
                 'dokumentasi',
-            ]);
+            ];
+
+            foreach ($columns as $column) {
+                if (Schema::hasColumn('laporan_hasil', $column)) {
+                    $table->dropColumn($column);
+                }
+            }
         });
     }
 };

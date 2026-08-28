@@ -100,14 +100,6 @@
             <div>
                 <div class="text-[10px] font-bold tracking-widest text-emerald-400 uppercase px-4 mb-2">Pengajuan</div>
                 <div class="space-y-1 text-emerald-100/90 font-medium">
-                    <a href="{{ route('admin.penelitian') }}"
-                        class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition {{ request()->routeIs('admin.penelitian') ? 'bg-emerald-700 text-white font-bold shadow-lg shadow-emerald-950/40' : 'hover:bg-emerald-900/60 hover:text-white' }}">
-                        <i class="fa-solid fa-microscope w-4 text-center"></i> Penelitian
-                    </a>
-                    <a href="{{ route('admin.pengabdian') }}"
-                        class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition {{ request()->routeIs('admin.pengabdian') ? 'bg-emerald-700 text-white font-bold shadow-lg shadow-emerald-950/40' : 'hover:bg-emerald-900/60 hover:text-white' }}">
-                        <i class="fa-solid fa-hand-holding-heart w-4 text-center"></i> Pengabdian
-                    </a>
                     <a href="{{ route('admin.semua-pengajuan') }}"
                         class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition {{ request()->routeIs('admin.semua-pengajuan') ? 'bg-emerald-700 text-white font-bold shadow-lg shadow-emerald-950/40' : 'hover:bg-emerald-900/60 hover:text-white' }}">
                         <i class="fa-solid fa-list-check w-4 text-center"></i> Semua Pengajuan
@@ -119,15 +111,15 @@
                 <div class="text-[10px] font-bold tracking-widest text-emerald-400 uppercase px-4 mb-2">Validasi</div>
                 <div class="space-y-1 text-emerald-100/90 font-medium">
                     <a href="{{ route('admin.validasi.proposal') }}"
-                        class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition {{ request()->routeIs('admin.validasi.proposal') ? 'bg-emerald-700 text-white font-bold shadow-lg shadow-emerald-950/40' : 'hover:bg-emerald-900/60 hover:text-white' }}">
+                        class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition {{ request()->routeIs('admin.validasi.proposal*') ? 'bg-emerald-700 text-white font-bold shadow-lg shadow-emerald-950/40' : 'hover:bg-emerald-900/60 hover:text-white' }}">
                         <i class="fa-solid fa-file-circle-check w-4 text-center"></i> Proposal
                     </a>
                     <a href="{{ route('admin.validasi.laporan-kemajuan') }}"
-                        class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition {{ request()->routeIs('admin.validasi.laporan-kemajuan') ? 'bg-emerald-700 text-white font-bold shadow-lg shadow-emerald-950/40' : 'hover:bg-emerald-900/60 hover:text-white' }}">
+                        class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition {{ request()->routeIs('admin.validasi.laporan-kemajuan*') ? 'bg-emerald-700 text-white font-bold shadow-lg shadow-emerald-950/40' : 'hover:bg-emerald-900/60 hover:text-white' }}">
                         <i class="fa-solid fa-spinner w-4 text-center"></i> Laporan Kemajuan
                     </a>
                     <a href="{{ route('admin.validasi.laporan_hasil') }}"
-                        class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition {{ request()->routeIs('admin.validasi.laporan_hasil') ? 'bg-emerald-700 text-white font-bold shadow-lg shadow-emerald-950/40' : 'hover:bg-emerald-900/60 hover:text-white' }}">
+                        class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition {{ request()->routeIs('admin.validasi.laporan_hasil*') ? 'bg-emerald-700 text-white font-bold shadow-lg shadow-emerald-950/40' : 'hover:bg-emerald-900/60 hover:text-white' }}">
                         <i class="fa-solid fa-square-poll-vertical w-4 text-center"></i> Laporan Hasil
                     </a>
                 </div>
@@ -138,19 +130,19 @@
                 </div>
                 <div class="space-y-1 text-emerald-100/90 font-medium">
                     <a href="{{ route('admin.master.skema') }}"
-                        class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition {{ request()->routeIs('admin.master.skema') ? 'bg-emerald-700 text-white font-bold shadow-lg shadow-emerald-950/40' : 'hover:bg-emerald-900/60 hover:text-white' }}">
+                        class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition {{ request()->routeIs('admin.master.skema*') ? 'bg-emerald-700 text-white font-bold shadow-lg shadow-emerald-950/40' : 'hover:bg-emerald-900/60 hover:text-white' }}">
                         <i class="fa-solid fa-layer-group w-4 text-center"></i> Skema
                     </a>
                     <a href="{{ route('admin.master.pegawai') }}"
-                        class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition {{ request()->routeIs('admin.master.pegawai') ? 'bg-emerald-700 text-white font-bold shadow-lg shadow-emerald-950/40' : 'hover:bg-emerald-900/60 hover:text-white' }}">
-                        <i class="fa-solid fa-id-badge w-4 text-center"></i>Manajemen User
+                        class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition {{ request()->routeIs('admin.master.pegawai*') ? 'bg-emerald-700 text-white font-bold shadow-lg shadow-emerald-950/40' : 'hover:bg-emerald-900/60 hover:text-white' }}">
+                        <i class="fa-solid fa-id-badge w-4 text-center"></i> Manajemen User
                     </a>
                     <a href="{{ route('admin.master.rumpun') }}"
-                        class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition {{ request()->routeIs('admin.master.rumpun') ? 'bg-emerald-700 text-white font-bold shadow-lg shadow-emerald-950/40' : 'hover:bg-emerald-900/60 hover:text-white' }}">
+                        class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition {{ request()->routeIs('admin.master.rumpun*') ? 'bg-emerald-700 text-white font-bold shadow-lg shadow-emerald-950/40' : 'hover:bg-emerald-900/60 hover:text-white' }}">
                         <i class="fa-solid fa-book-bookmark w-4 text-center"></i> Rumpun Ilmu
                     </a>
                     <a href="{{ route('admin.master.luaran') }}"
-                        class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition {{ request()->routeIs('admin.master.luaran') ? 'bg-emerald-700 text-white font-bold shadow-lg shadow-emerald-950/40' : 'hover:bg-emerald-900/60 hover:text-white' }}">
+                        class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition {{ request()->routeIs('admin.master.luaran*') ? 'bg-emerald-700 text-white font-bold shadow-lg shadow-emerald-950/40' : 'hover:bg-emerald-900/60 hover:text-white' }}">
                         <i class="fa-solid fa-arrow-up-right-from-square w-4 text-center"></i> Luaran
                     </a>
                 </div>
@@ -170,10 +162,11 @@
                     <i class="fa-solid fa-bell w-4 text-center text-amber-400"></i> Notifikasi
                 </a>
 
+                <!-- FORM LOGOUT YANG SUDAH DISESUAIKAN DENGAN RUTE ADMIN -->
                 <form action="{{ route('admin.logout') }}" method="POST" class="pt-2">
                     @csrf
                     <button type="submit"
-                        class="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl hover:bg-rose-950/60 text-rose-300 hover:text-rose-100 transition text-left font-semibold">
+                        class="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl hover:bg-rose-950/60 text-rose-300 hover:text-rose-100 transition text-left font-semibold cursor-pointer">
                         <i class="fa-solid fa-power-off w-4 text-center"></i> Logout
                     </button>
                 </form>

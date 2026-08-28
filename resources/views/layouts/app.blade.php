@@ -10,6 +10,67 @@
         href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+
+    {{-- ====== OVERRIDE STYLE: sidebar hijau, logout merah ======
+         Idealnya potongan CSS ini dipindahkan ke dalam app.css, tapi ditaruh di sini
+         dulu supaya bisa langsung jalan tanpa perlu edit file lain. ====== --}}
+    <style>
+        :root {
+            --sidebar-bg: #0b3d2e;
+            /* hijau tua, samakan dengan sidebar admin */
+            --sidebar-bg-active: #00875A;
+            --sidebar-text: #d8ece3;
+            --sidebar-text-muted: #9fc6b6;
+            --logout-red: #e5484d;
+            --logout-red-bg: rgba(229, 72, 77, 0.12);
+        }
+
+        .sidebar {
+            background: var(--sidebar-bg) !important;
+        }
+
+        .sidebar .brand-text b,
+        .sidebar .brand-text span,
+        .sidebar .sidebar-foot {
+            color: var(--sidebar-text) !important;
+        }
+
+        .sidebar .nav a {
+            color: var(--sidebar-text) !important;
+        }
+
+        .sidebar .nav a:hover {
+            background: rgba(255, 255, 255, 0.08) !important;
+        }
+
+        .sidebar .nav a.active {
+            background: var(--sidebar-bg-active) !important;
+            color: #fff !important;
+        }
+
+        /* Tombol Logout dibuat merah, dipisah dari menu lain */
+        .sidebar .nav a.logout-link {
+            color: var(--logout-red) !important;
+            margin-top: 8px;
+        }
+
+        .sidebar .nav a.logout-link:hover {
+            background: var(--logout-red-bg) !important;
+        }
+
+        /* Avatar topbar: pastikan foto profil mengisi penuh & tetap bulat/rounded
+           mengikuti gaya .avatar bawaan app.css, apapun ukurannya. */
+        .topbar .avatar {
+            overflow: hidden;
+        }
+
+        .topbar .avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+    </style>
 </head>
 
 <body>
@@ -24,15 +85,13 @@
                 <a class="{{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}"><span
                         class="ic">▦</span>Dashboard</a>
                 <a class="{{ request()->routeIs('pengajuan.*') ? 'active' : '' }}"
-                    href="{{ route('pengajuan.step1') }}"><span class="ic">✎</span>Pengajuan Baru</a>
+                    href="{{ route('pengajuan.daftar') }}"><span class="ic">✎</span>Pengajuan Proposal</a>
                 <a class="{{ request()->routeIs('riwayat') || request()->routeIs('pengajuan.detail') ? 'active' : '' }}"
                     href="{{ route('riwayat') }}"><span class="ic">◷</span>Riwayat Pengajuan</a>
                 <a class="{{ request()->routeIs('laporan.kemajuan*') ? 'active' : '' }}"
                     href="{{ route('laporan.kemajuan') }}"><span class="ic">▤</span>Laporan Kemajuan</a>
                 <a class="{{ request()->routeIs('laporan.*') && !request()->routeIs('laporan.kemajuan*') ? 'active' : '' }}"
                     href="{{ route('laporan.index', 'hasil') }}"><span class="ic">▤</span>Laporan Hasil</a>
-                <a class="{{ request()->routeIs('luaran.*') ? 'active' : '' }}"
-                    href="{{ route('luaran.index') }}"><span class="ic">★</span>Luaran</a>
                 <a class="{{ request()->routeIs('notifikasi*') ? 'active' : '' }}"
                     href="{{ route('notifikasi') }}"><span class="ic">🔔</span>Notifikasi</a>
                 <a class="{{ request()->routeIs('profil*') ? 'active' : '' }}" href="{{ route('profil') }}"><span
@@ -40,7 +99,7 @@
                 <a href="{{ route('ubah-password') }}"
                     class="{{ request()->routeIs('ubah-password') ? 'active' : '' }}"><span class="ic">⚿</span>Ubah
                     Password</a>
-                <a href="#"
+                <a href="#" class="logout-link"
                     onclick="event.preventDefault(); document.getElementById('logout-form').submit();"><span
                         class="ic">⏻</span>Logout</a>
                 <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display:none;">@csrf</form>
@@ -56,9 +115,13 @@
                     <div class="crumbs">@yield('crumbs', 'Dashboard')</div>
                 </div>
                 <div class="who">
-                    <a href="{{ route('notifikasi') }}" class="bell" style="text-decoration:none;">&#128276;<span
-                            class="dot"></span></a>
-                    <div class="avatar">{{ auth()->user()->initials() }}</div>
+                    <div class="avatar">
+                        @if (auth()->user()->foto)
+                            <img src="{{ Storage::url(auth()->user()->foto) }}" alt="{{ auth()->user()->nama }}">
+                        @else
+                            {{ auth()->user()->initials() }}
+                        @endif
+                    </div>
                     <div class="meta">
                         <b>{{ auth()->user()->nama }}</b>
                         <span>Dosen</span>
