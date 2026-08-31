@@ -370,8 +370,8 @@ class LaporanController extends Controller
             'judulHalaman' => 'Laporan Hasil',
             'pengajuan' => $pengajuan,
             'laporan' => $laporan,
-            'kembaliUrl' => route('riwayat'),
-            'kembaliLabel' => 'Lihat Riwayat Pengajuan',
+            'kembaliUrl' => route('laporan.index', 'hasil'),
+            'kembaliLabel' => 'Kembali ke Laporan Hasil',
         ]);
     }
 

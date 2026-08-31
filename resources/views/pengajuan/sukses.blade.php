@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
-@section('title', 'Pengajuan Baru')
-@section('crumbs', 'Menu Dosen / Pengajuan Baru')
+@section('title', $judulHalaman)
+@section('crumbs', 'Menu Dosen / ' . $judulHalaman)
 
 @section('content')
     <link rel="stylesheet" href="{{ asset('css/wizard.css') }}">
@@ -89,33 +89,25 @@
         }
     </style>
 
-    <div class="card wizard-card">
-        @include('pengajuan._stepper', ['current' => 6])
-
-        <div style="text-align:center; padding:40px 20px;">
-            <div class="sukses-icon"
-                style="width:64px; height:64px; border-radius:14px; background:#0f6e4f; color:#fff; display:flex; align-items:center; justify-content:center; font-size:32px; margin:0 auto 20px auto;">
-                <span>&#10003;</span>
-            </div>
-
-            <div class="sukses-fade-1" style="font-size:20px; font-weight:800; margin-bottom:8px;">Pengajuan berhasil dikirim!
-            </div>
-
-            <div class="sukses-fade-2" style="color:#4b5563; font-size:14px; margin-bottom:6px;">
-                Kode pengajuan: <b>{{ $kode }}</b> &middot;
-                Jalur {{ $jalur === 'mandiri' ? 'Mandiri' : 'Simlitabkes' }} &middot;
-                Status: <b>Dalam Proses</b>.
-            </div>
-
-            <div class="sukses-fade-3" style="color:#6b7280; font-size:13px; max-width:520px; margin:0 auto 24px auto;">
-                @if ($jalur === 'mandiri')
-                    Anda akan menerima notifikasi di setiap tahap: Proposal &rarr; Laporan Hasil.
-                @else
-                    Anda akan menerima notifikasi di setiap tahap: Proposal &rarr; Laporan Kemajuan &rarr; Laporan Hasil.
-                @endif
-            </div>
-
-            <a href="{{ route('riwayat') }}" class="btn btn-primary sukses-fade-4">Lihat Riwayat Pengajuan</a>
+    <div class="card wizard-card" style="text-align:center; padding:48px 24px;">
+        <div class="sukses-icon"
+            style="width:64px; height:64px; border-radius:16px; background:var(--green-700); color:#fff; display:flex; align-items:center; justify-content:center; font-size:30px; margin:0 auto 18px;">
+            <span>✓</span>
         </div>
+
+        <h2 class="sukses-fade-1" style="font-size:19px; font-weight:800; margin-bottom:8px;">{{ $judulHalaman }} berhasil
+            dikirim!</h2>
+
+        <div class="sukses-fade-2" style="font-size:13px; color:var(--ink-700); margin-bottom:4px;">
+            Kode pengajuan: <b>{{ $pengajuan->kode }}</b> &middot; Jalur {{ ucfirst($pengajuan->jalur) }} &middot; Status:
+            <b>Dalam Proses</b>
+        </div>
+
+        <div class="sukses-fade-3" style="font-size:12.5px; color:var(--ink-500); max-width:440px; margin:0 auto 26px;">
+            {{ $judulHalaman }} kamu sudah masuk ke antrean validasi admin. Kamu akan menerima notifikasi setelah laporan
+            ini diperiksa.
+        </div>
+
+        <a href="{{ $kembaliUrl }}" class="btn btn-primary sukses-fade-4">{{ $kembaliLabel }}</a>
     </div>
 @endsection

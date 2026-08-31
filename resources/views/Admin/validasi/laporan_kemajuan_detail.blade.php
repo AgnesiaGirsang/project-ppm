@@ -113,7 +113,7 @@
                 <div class="space-y-2.5">
                     @forelse($selected->pengajuan->luaran ?? [] as $pl)
                         @php
-                            $tercapai = array_key_exists($pl->id, $selected->luaran_tercapai ?? []);
+                            $tercapai = in_array($pl->id, $selected->luaran_tercapai ?? []);
                         @endphp
                         <div
                             class="flex items-center justify-between gap-3 p-2.5 bg-slate-50 rounded-xl border border-slate-100">
@@ -241,12 +241,11 @@
                     </div>
 
                     <!-- Catatan / Catatan Revisi -->
-                    <div class="space-y-1.5 pt-1">
-                        <label class="block font-semibold text-slate-700 text-xs">
-                            Catatan / Catatan Revisi <span class="text-slate-400 font-normal">(opsional)</span>
-                        </label>
+                    <div class="space-y-1.5 pt-2">
+                        <label class="block font-bold text-slate-700 text-xs">Catatan / Catatan Revisi <span
+                                class="text-rose-500 font-normal">(Jika revisi wajib diisi)</span></label>
                         <textarea name="catatan" rows="3" placeholder="Tuliskan catatan atau instruksi perbaikan..."
-                            class="w-full border border-slate-200 rounded-xl p-3 text-xs focus:outline-none focus:border-emerald-700 bg-slate-50/50 resize-none transition">{{ $selected->catatan_validator ?? '' }}</textarea>
+                            class="w-full border border-slate-200 rounded-xl p-3 text-xs focus:outline-none focus:border-emerald-700 bg-slate-50/50 resize-none transition">{{ $pengajuan->catatan_validator ?? '' }}</textarea>
                     </div>
 
                     <!-- Tombol Aksi -->

@@ -293,7 +293,7 @@
 
                     <div class="space-y-1.5 pt-2">
                         <label class="block font-bold text-slate-700 text-xs">Catatan / Catatan Revisi <span
-                                class="text-slate-400 font-normal">(opsional)</span></label>
+                                class="text-rose-500 font-normal">(Jika revisi wajib diisi)</span></label>
                         <textarea name="catatan" rows="3" placeholder="Tuliskan catatan atau instruksi perbaikan..."
                             class="w-full border border-slate-200 rounded-xl p-3 text-xs focus:outline-none focus:border-emerald-700 bg-slate-50/50 resize-none transition">{{ $pengajuan->catatan_validator ?? '' }}</textarea>
                     </div>

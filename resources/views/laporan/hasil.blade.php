@@ -225,7 +225,7 @@
                                     @elseif ($laporan->status === 'draft')
                                         <span class="lh-badge draft">Draft</span>
                                     @elseif ($laporan->status === 'proses')
-                                        <span class="lh-badge proses">Menunggu Validasi</span>
+                                        <span class="lh-badge proses">Sedang Diproses</span>
                                     @elseif ($laporan->status === 'disetujui')
                                         <span class="lh-badge disetujui">Disetujui</span>
                                     @elseif ($laporan->status === 'revisi')

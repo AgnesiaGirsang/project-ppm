@@ -104,7 +104,7 @@
                                 {{ $l->luaranMaster->nama }}
                             </span>
                             <span
-                                style="display:inline-block; padding:2px 10px; border-radius:99px; font-size:10px; font-weight:700; letter-spacing:.3px; white-space:nowrap; {{ $l->luaranMaster->wajib ? 'background:#fee2e2; color:#dc2626;' : 'background:#dbeafe; color:#2563eb;' }}">{{ $l->luaranMaster->wajib ? 'WAJIB' : 'TAMBAHAN' }}</span>
+                                style="display:inline-block; padding:2px 10px; border-radius:99px; font-size:10px; font-weight:700; letter-spacing:.3px; white-space:nowrap; {{ $l->is_wajib ? 'background:#fee2e2; color:#dc2626;' : 'background:#dbeafe; color:#2563eb;' }}">{{ $l->is_wajib ? 'WAJIB' : 'TAMBAHAN' }}</span>
                         </label>
                     @endforeach
 

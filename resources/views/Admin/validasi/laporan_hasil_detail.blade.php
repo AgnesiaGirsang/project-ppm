@@ -137,10 +137,18 @@
                                     {{ $l->is_wajib ? 'Wajib' : 'Tambahan' }}
                                 </span>
                             </div>
-                            <div
-                                class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-slate-600 text-xs truncate">
-                                {{ !empty($linkBukti) ? $linkBukti : 'Link / nama file bukti luaran' }}
-                            </div>
+                            @if (!empty($linkBukti))
+                                <a href="{{ $linkBukti }}" target="_blank" rel="noopener"
+                                    class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-emerald-700 text-xs truncate block hover:underline hover:bg-emerald-50/40 transition">
+                                    <i
+                                        class="fa-solid fa-arrow-up-right-from-square text-[10px] mr-1"></i>{{ $linkBukti }}
+                                </a>
+                            @else
+                                <div
+                                    class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-slate-400 text-xs truncate italic">
+                                    Link / nama file bukti luaran
+                                </div>
+                            @endif
                         </div>
                     @empty
                         <p class="text-slate-400 italic">Tidak ada data luaran.</p>
@@ -279,9 +287,9 @@
 
                     <div class="space-y-1.5 pt-2">
                         <label class="block font-bold text-slate-700 text-xs">Catatan / Catatan Revisi <span
-                                class="text-slate-400 font-normal">(opsional)</span></label>
+                                class="text-rose-500 font-normal">(Jika revisi wajib diisi)</span></label>
                         <textarea name="catatan" rows="3" placeholder="Tuliskan catatan atau instruksi perbaikan..."
-                            class="w-full border border-slate-200 rounded-xl p-3 text-xs focus:outline-none focus:border-emerald-700 bg-slate-50/50 resize-none transition">{{ $selected->catatan_validator ?? '' }}</textarea>
+                            class="w-full border border-slate-200 rounded-xl p-3 text-xs focus:outline-none focus:border-emerald-700 bg-slate-50/50 resize-none transition">{{ $pengajuan->catatan_validator ?? '' }}</textarea>
                     </div>
 
                     <div class="flex items-center gap-3 pt-2">

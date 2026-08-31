@@ -148,6 +148,14 @@ class PengajuanController extends Controller
 
         $w = $this->wizard();
 
+        // Buang dari session anggota manapun yang ID-nya sama dengan ketua
+        // (misalnya sisa dari sesi wizard lama sebelum perbaikan ini berlaku).
+        $w['anggota'] = collect($w['anggota'])
+            ->reject(fn ($a) => !empty($a['pegawai_id']) && (int) $a['pegawai_id'] === (int) $ketua->id)
+            ->values()
+            ->all();
+        $this->saveWizard(['anggota' => $w['anggota']]);
+
         $initialAnggotaJson = collect($w['anggota'])->map(function ($a) {
             return [
                 'pegawai_id' => $a['pegawai_id'] ?? '',
@@ -167,9 +175,19 @@ class PengajuanController extends Controller
 
     public function postStep2(Request $request)
     {
+        $ketua = Auth::user();
+
         $data = $request->validate([
             'anggota' => 'nullable|array',
-            'anggota.*.pegawai_id' => 'nullable|exists:pegawais,id',
+            'anggota.*.pegawai_id' => [
+                'nullable',
+                'exists:pegawais,id',
+                function ($attribute, $value, $fail) use ($ketua) {
+                    if ($value && (int) $value === (int) $ketua->id) {
+                        $fail('Ketua pengaju tidak bisa dipilih sebagai anggota.');
+                    }
+                },
+            ],
             'anggota.*.nama_external' => 'nullable|string|max:255',
             'anggota.*.institusi_external' => 'nullable|string|max:255',
         ]);
@@ -352,6 +370,15 @@ class PengajuanController extends Controller
             PengajuanTim::create(['pengajuan_id' => $pengajuan->id, 'pegawai_id' => $ketua->id, 'peran' => 'ketua']);
 
             foreach ($w['anggota'] as $a) {
+                // Pengaman terakhir (defense-in-depth): meski postStep2() dan
+                // step2() sudah mencegah ketua terpilih sebagai anggota, baris
+                // ini memastikan proses submit final tidak akan pernah
+                // menyimpan ketua dua kali walau datanya lolos dari validasi
+                // sebelumnya (mis. session lama, request manual, dsb).
+                if (!empty($a['pegawai_id']) && (int) $a['pegawai_id'] === (int) $ketua->id) {
+                    continue;
+                }
+
                 if (!empty($a['pegawai_id'])) {
                     PengajuanTim::create([
                         'pengajuan_id' => $pengajuan->id,
@@ -419,8 +446,10 @@ class PengajuanController extends Controller
         abort_unless($pengajuan, 404);
 
         return view('pengajuan.sukses', [
-            'kode' => $pengajuan->kode,
-            'jalur' => $pengajuan->jalur,
+            'judulHalaman' => 'Pengajuan Baru',
+            'pengajuan'    => $pengajuan,
+            'kembaliUrl'   => route('pengajuan.daftar'),
+            'kembaliLabel' => 'Kembali ke Daftar Proposal',
         ]);
     }
 
@@ -476,7 +505,14 @@ class PengajuanController extends Controller
             'total_biaya' => 'required|numeric|min:0',
             'proposal' => 'nullable|file|mimes:pdf|max:2048',
             'tim' => 'nullable|array',
-            'tim.*' => 'exists:pegawais,id',
+            'tim.*' => [
+                'exists:pegawais,id',
+                function ($attribute, $value, $fail) use ($user) {
+                    if ((int) $value === (int) $user->id) {
+                        $fail('Ketua pengaju tidak bisa dipilih sebagai anggota.');
+                    }
+                },
+            ],
             'tim_luar_nama' => 'nullable|array',
             'tim_luar_nama.*' => 'nullable|string|max:255',
             'tim_luar_instansi' => 'nullable|array',

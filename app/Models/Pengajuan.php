@@ -44,10 +44,12 @@ class Pengajuan extends Model
         return $this->hasMany(PengajuanTim::class);
     }
 
-    // Alias 'anggotas' agar cocok dengan pemanggilan with(['anggotas']) di controller
+    // Alias 'anggotas' agar cocok dengan pemanggilan with(['anggotas']) di controller.
+    // Difilter khusus peran 'anggota' supaya ketua tidak ikut ter-loop sebagai
+    // anggota di halaman-halaman yang memakai relasi ini (mis. Validasi Proposal admin).
     public function anggotas()
     {
-        return $this->hasMany(PengajuanTim::class, 'pengajuan_id');
+        return $this->hasMany(PengajuanTim::class, 'pengajuan_id')->where('peran', 'anggota');
     }
 
     public function anggotaTim()
@@ -73,11 +75,33 @@ class Pengajuan extends Model
     // Label status buat ditampilin di badge (samain sama prototype)
     public function statusLabel(): array
     {
+        // Kalau pengajuan sudah masuk tahap Laporan Kemajuan/Hasil, status yang
+        // relevan adalah status laporan di tahap itu — bukan status validasi
+        // proposal lama, yang tetap 'disetujui' selamanya sejak proposal lolos.
+        if ($this->tahap === 'laporan_kemajuan') {
+            return $this->laporanStatusLabel($this->laporanKemajuan?->status);
+        }
+
+        if ($this->tahap === 'laporan_hasil') {
+            return $this->laporanStatusLabel($this->laporanHasil?->status);
+        }
+
         return match ($this->status) {
             'proses' => ['Dalam Proses', 'b-menunggu'],
             'disetujui' => ['Disetujui', 'b-disetujui'],
             'revisi' => ['Direvisi', 'b-revisi'],
             default => [$this->status, 'b-menunggu'],
+        };
+    }
+
+    private function laporanStatusLabel(?string $status): array
+    {
+        return match ($status) {
+            'draft' => ['Draft', 'b-menunggu'],
+            'proses' => ['Sedang Diproses', 'b-menunggu'],
+            'disetujui' => ['Disetujui', 'b-disetujui'],
+            'revisi' => ['Direvisi', 'b-revisi'],
+            default => ['Dalam Proses', 'b-menunggu'],
         };
     }
 }

@@ -30,6 +30,46 @@
             margin-left: 6px;
             vertical-align: middle;
         }
+
+        /* Kotak centang status luaran — dibuat custom (bukan checkbox native) supaya warnanya konsisten hijau, tidak abu-abu walau readonly */
+        .luaran-item input[type="checkbox"] {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+            pointer-events: none;
+        }
+
+        .check-visual {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            min-width: 18px;
+            border: 2px solid #cbd5e1;
+            border-radius: 5px;
+            background: #fff;
+            position: relative;
+            vertical-align: middle;
+            margin-right: 6px;
+            transition: background .15s ease, border-color .15s ease;
+        }
+
+        .check-visual.is-checked {
+            background: #00875A;
+            border-color: #00875A;
+        }
+
+        .check-visual.is-checked::after {
+            content: '';
+            position: absolute;
+            left: 5px;
+            top: 1px;
+            width: 5px;
+            height: 9px;
+            border: solid #fff;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
     </style>
 
     <div style="margin-bottom:14px;">
@@ -68,7 +108,7 @@
 
             <div class="grid g2">
                 <div class="field"><label>Tahun Pelaksanaan</label>
-                    <div>{{ $pengajuan->tahun }}</div>
+                    <div>{{ $pengajuan->tahun_pelaksanaan }}</div>
                 </div>
                 <div class="field">
                     <label>Status Laporan Hasil</label>
@@ -161,6 +201,8 @@
                     <div class="hd">
                         <input type="checkbox" id="chk{{ $pl->id }}" disabled
                             {{ $existing && !empty($existing['link']) ? 'checked' : '' }}>
+                        <span class="check-visual {{ $existing && !empty($existing['link']) ? 'is-checked' : '' }}"
+                            id="checkVisual{{ $pl->id }}"></span>
                         <b>{{ $pl->luaranMaster->nama ?? '-' }}</b>
                         @if ($pl->is_wajib)
                             <span class="tag-wajib">WAJIB</span>
@@ -171,7 +213,7 @@
                     <input type="text" form="formHasil" name="luaran[{{ $pl->id }}][link]"
                         id="linkLuaran{{ $pl->id }}" placeholder="Link / nama file bukti luaran"
                         value="{{ $existing['link'] ?? '' }}" {{ $readonly ?? false ? 'disabled' : '' }}
-                        oninput="document.getElementById('chk{{ $pl->id }}').checked = this.value.trim().length > 0; updateKemajuanLuaran();">
+                        oninput="const isFilled = this.value.trim().length > 0; document.getElementById('chk{{ $pl->id }}').checked = isFilled; document.getElementById('checkVisual{{ $pl->id }}').classList.toggle('is-checked', isFilled); updateKemajuanLuaran();">
                 </div>
             @empty
                 <div class="sub">Tidak ada luaran yang direncanakan pada pengajuan ini.</div>
@@ -204,8 +246,6 @@
 
             @unless ($readonly ?? false)
                 <div style="display:flex; justify-content:space-between; margin-top:20px;">
-                    <button class="btn btn-outline" type="submit" form="formHasil" name="action" value="draft"
-                        formnovalidate>Simpan Draft</button>
                     <button class="btn btn-primary" type="submit" form="formHasil" name="action" value="kirim">Kirim
                         Laporan</button>
                 </div>
