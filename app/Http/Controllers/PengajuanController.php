@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\LuaranMaster;
+use App\Models\Notification;
 use App\Models\Pegawai;
 use App\Models\Pengajuan;
 use App\Models\PengajuanLuaran;
@@ -13,6 +14,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 
 class PengajuanController extends Controller
 {
@@ -20,11 +22,6 @@ class PengajuanController extends Controller
 
     /* ===================== DAFTAR PENGAJUAN (TABEL) ===================== */
 
-    /**
-     * Halaman daftar (tabel) seluruh proposal yang pernah diajukan dosen ini.
-     * Dosen hanya bisa melihat detail; hanya bisa mengubah data (Tim, Judul,
-     * Total Biaya, Dokumen Proposal) saat status pengajuan = "revisi".
-     */
     public function daftar()
     {
         $daftarPengajuan = Pengajuan::with('skema')
@@ -392,6 +389,23 @@ class PengajuanController extends Controller
 
             return $pengajuan;
         });
+
+        // Kirim notifikasi ke semua admin — dibungkus try-catch supaya kalau
+        // gagal karena sebab apapun, proses submit proposal tetap sukses dan
+        // tidak terganggu. Errornya (kalau ada) tercatat di storage/logs/laravel.log.
+        try {
+            $adminIds = Pegawai::where('role', 'admin')->pluck('id');
+            foreach ($adminIds as $adminId) {
+                Notification::create([
+                    'user_id' => $adminId,
+                    'type' => 'pengajuan',
+                    'title' => 'Proposal Baru Masuk',
+                    'message' => 'Proposal "' . $pengajuan->judul . '" dari ' . Auth::user()->nama . ' menunggu validasi.',
+                ]);
+            }
+        } catch (\Throwable $e) {
+            Log::error('Gagal kirim notifikasi admin (pengajuan baru): ' . $e->getMessage());
+        }
 
         $this->resetWizard();
 

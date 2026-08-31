@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Notification;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class NotificationController extends Controller
 {
@@ -12,7 +13,7 @@ class NotificationController extends Controller
     {
         $filter = $request->get('filter', 'semua');
 
-        $query = Notification::latest();
+        $query = Notification::where('user_id', Auth::id())->latest();
 
         if ($filter !== 'semua') {
             $query->where('type', $filter);
@@ -25,7 +26,7 @@ class NotificationController extends Controller
 
     public function markAsRead($id)
     {
-        $notification = Notification::findOrFail($id);
+        $notification = Notification::where('user_id', Auth::id())->findOrFail($id);
         $notification->update(['read_at' => now()]);
 
         return back();
@@ -33,7 +34,7 @@ class NotificationController extends Controller
 
     public function markAllAsRead()
     {
-        Notification::whereNull('read_at')->update(['read_at' => now()]);
+        Notification::where('user_id', Auth::id())->whereNull('read_at')->update(['read_at' => now()]);
 
         return back()->with('success', 'Semua notifikasi ditandai sudah dibaca.');
     }

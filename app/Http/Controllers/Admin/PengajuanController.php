@@ -14,7 +14,6 @@ class PengajuanController extends Controller
     {
         $title = 'Semua Pengajuan';
 
-        // 1. Hitung Total untuk Kartu Statistik (Gabungan 3 Tabel)
         $totalSemua = Pengajuan::count() + LaporanKemajuan::count() + LaporanHasil::count();
 
         $totalProses = Pengajuan::whereIn('status', ['proses', 'menunggu'])->count()
@@ -31,7 +30,6 @@ class PengajuanController extends Controller
 
         $totalRevisi = $revisiProposal + $revisiKemajuan + $revisiHasil;
 
-        // 2. Ambil Filter Request
         $search = $request->input('search');
         $jenis = $request->input('jenis');
         $jalur = $request->input('jalur');
@@ -44,7 +42,6 @@ class PengajuanController extends Controller
         }
         $tahun = $request->input('tahun');
 
-        // 3. Query Data Proposal
         $proposalQuery = Pengajuan::with(['pegawai', 'skema', 'rumpunIlmu'])
             ->when($search, fn($q) => $q->where(fn($sub) => $sub->where('judul', 'like', "%{$search}%")->orWhere('kode', 'like', "%{$search}%")))
             ->when($jenis, fn($q) => $q->where('jenis', $jenis))
@@ -62,7 +59,6 @@ class PengajuanController extends Controller
                 return $item;
             });
 
-        // 4. Query Data Laporan Kemajuan (Sinkronisasi Filter Jenis & Jalur lewat relasi pengajuan)
         $kemajuanQuery = collect();
         if (class_exists(LaporanKemajuan::class)) {
             $kemajuanQuery = LaporanKemajuan::with(['pengajuan.pegawai', 'pengajuan.skema', 'pengajuan.rumpunIlmu'])
@@ -83,7 +79,6 @@ class PengajuanController extends Controller
                 });
         }
 
-        // 5. Query Data Laporan Hasil (Sinkronisasi Filter Jenis & Jalur lewat relasi pengajuan)
         $hasilQuery = LaporanHasil::with(['pengajuan.pegawai', 'pengajuan.skema', 'pengajuan.rumpunIlmu'])
             ->when($search, fn($q) => $q->where('judul', 'like', "%{$search}%")->orWhereHas('pengajuan', fn($sub) => $sub->where('judul', 'like', "%{$search}%")))
             ->when($jenis, fn($q) => $q->whereHas('pengajuan', fn($sub) => $sub->where('jenis', $jenis)))
@@ -101,11 +96,9 @@ class PengajuanController extends Controller
                 return $item;
             });
 
-        // 6. Gabungkan Semua Koleksi dan Urutkan Berdasarkan Aktivitas Terbaru (updated_at)
         $semuaData = $proposalQuery->concat($kemajuanQuery)->concat($hasilQuery)
             ->sortByDesc('updated_at');
 
-        // 7. Pagination Manual untuk Koleksi Gabungan
         $perPage = 10;
         $page = request()->input('page', 1);
         $pengajuans = new \Illuminate\Pagination\LengthAwarePaginator(
@@ -126,21 +119,18 @@ class PengajuanController extends Controller
         ));
     }
 
-    // Dialihkan otomatis ke halaman semua pengajuan dengan filter jenis penelitian
     public function penelitian(Request $request)
     {
         $request->merge(['jenis' => 'penelitian']);
         return $this->semua($request);
     }
 
-    // Dialihkan otomatis ke halaman semua pengajuan dengan filter jenis pengabdian
     public function pengabdian(Request $request)
     {
         $request->merge(['jenis' => 'pengabdian']);
         return $this->semua($request);
     }
 
-    // --- PROPOSAL ---
     public function showDokumen($id)
     {
         $pengajuan = Pengajuan::findOrFail($id);
@@ -173,7 +163,6 @@ class PengajuanController extends Controller
         return response()->download($filePath, $namaFile);
     }
 
-    // --- LAPORAN KEMAJUAN ---
     public function showLaporanKemajuan($id)
     {
         $laporan = LaporanKemajuan::findOrFail($id);
@@ -204,7 +193,6 @@ class PengajuanController extends Controller
         return response()->download($filePath, $namaFile);
     }
 
-    // --- LAPORAN HASIL ---
     public function showLaporanHasil($id)
     {
         $laporan = LaporanHasil::findOrFail($id);

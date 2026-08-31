@@ -44,7 +44,7 @@
                                 class="text-slate-400 font-semibold block text-[11px] uppercase tracking-wider mb-0.5">Jenis
                                 Kegiatan</span>
                             <span
-                                class="font-bold text-slate-900 text-xs block">{{ ucfirst($selected->pengajuan->jenis_kegiatan ?? '-') }}</span>
+                                class="font-bold text-slate-900 text-xs block">{{ ucfirst($selected->pengajuan->jenis ?? '-') }}</span>
                         </div>
                         <div>
                             <span
@@ -113,7 +113,7 @@
                 <div class="space-y-2.5">
                     @forelse($selected->pengajuan->luaran ?? [] as $pl)
                         @php
-                            $tercapai = in_array($pl->id, $selected->luaran_tercapai ?? []);
+                            $tercapai = array_key_exists($pl->id, $selected->luaran_tercapai ?? []);
                         @endphp
                         <div
                             class="flex items-center justify-between gap-3 p-2.5 bg-slate-50 rounded-xl border border-slate-100">
@@ -123,8 +123,8 @@
                                 <span class="font-semibold text-slate-800">{{ $pl->luaranMaster->nama ?? '-' }}</span>
                             </div>
                             <span
-                                class="text-[10px] font-bold px-2 py-0.5 rounded-md {{ $pl->luaranMaster->wajib ?? false ? 'bg-rose-50 text-rose-600' : 'bg-sky-50 text-sky-600' }} uppercase">
-                                {{ $pl->luaranMaster->wajib ?? false ? 'Wajib' : 'Tambahan' }}
+                                class="text-[10px] font-bold px-2 py-0.5 rounded-md {{ $pl->is_wajib ? 'bg-rose-50 text-rose-600' : 'bg-sky-50 text-sky-600' }} uppercase">
+                                {{ $pl->is_wajib ? 'Wajib' : 'Tambahan' }}
                             </span>
                         </div>
                     @empty

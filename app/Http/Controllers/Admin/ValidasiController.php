@@ -38,7 +38,7 @@ class ValidasiController extends Controller
     {
         $title = 'Validasi Proposal';
 
-        $pengajuan = Pengajuan::with(['pegawai', 'skema', 'rumpunIlmu', 'tim.pegawai', 'luaran'])->findOrFail($id);
+        $pengajuan = Pengajuan::with(['pegawai', 'skema', 'rumpunIlmu', 'tim.pegawai', 'luaran.luaranMaster'])->findOrFail($id);
         $selected = $pengajuan;
 
         return view('Admin.validasi.proposal_detail', compact('title', 'pengajuan', 'selected'));

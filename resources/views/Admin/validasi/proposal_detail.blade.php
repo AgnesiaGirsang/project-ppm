@@ -211,15 +211,15 @@
                     @endphp
 
                     @foreach ($luaranList as $luaran)
-                        @if (strtolower($luaran->kelompok ?? ($luaran->jenis ?? '')) == 'wajib' ||
-                                (isset($luaran->is_wajib) && $luaran->is_wajib))
+                        @if ($luaran->is_wajib)
                             <div
                                 class="p-4 rounded-xl border border-emerald-200/80 bg-emerald-50/20 flex items-center justify-between gap-4">
                                 <div>
                                     <h4 class="text-xs font-extrabold text-slate-900">
-                                        {{ $luaran->nama ?? ($luaran->judul ?? 'Luaran Wajib') }}</h4>
-                                    <p class="text-[11px] text-slate-500 mt-0.5">Kategori: <span
-                                            class="font-medium text-slate-700">{{ $luaran->kategori ?? '-' }}</span></p>
+                                        {{ $luaran->luaranMaster->nama ?? 'Luaran Wajib' }}</h4>
+                                    <p class="text-[11px] text-slate-500 mt-0.5">Opsi/Indikator: <span
+                                            class="font-medium text-slate-700">{{ $luaran->opsi_dipilih ?? '-' }}</span>
+                                    </p>
                                 </div>
                                 <span
                                     class="px-3 py-1 rounded-lg text-[10px] font-extrabold bg-emerald-800 text-white uppercase tracking-wider shrink-0 shadow-2xs">Wajib</span>
@@ -228,15 +228,15 @@
                     @endforeach
 
                     @foreach ($luaranList as $luaran)
-                        @if (strtolower($luaran->kelompok ?? ($luaran->jenis ?? '')) != 'wajib' &&
-                                (!isset($luaran->is_wajib) || !$luaran->is_wajib))
+                        @if (!$luaran->is_wajib)
                             <div
                                 class="p-4 rounded-xl border border-slate-200/80 bg-slate-50/50 flex items-center justify-between gap-4">
                                 <div>
                                     <h4 class="text-xs font-extrabold text-slate-900">
-                                        {{ $luaran->nama ?? ($luaran->judul ?? 'Luaran Tambahan') }}</h4>
-                                    <p class="text-[11px] text-slate-500 mt-0.5">Kategori: <span
-                                            class="font-medium text-slate-700">{{ $luaran->kategori ?? '-' }}</span></p>
+                                        {{ $luaran->luaranMaster->nama ?? 'Luaran Tambahan' }}</h4>
+                                    <p class="text-[11px] text-slate-500 mt-0.5">Opsi/Indikator: <span
+                                            class="font-medium text-slate-700">{{ $luaran->opsi_dipilih ?? '-' }}</span>
+                                    </p>
                                 </div>
                                 <span
                                     class="px-3 py-1 rounded-lg text-[10px] font-extrabold bg-slate-200 text-slate-700 uppercase tracking-wider shrink-0">Tambahan</span>

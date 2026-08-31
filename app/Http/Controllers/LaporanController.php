@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\LaporanHasil;
 use App\Models\LaporanKemajuan;
 use App\Models\LuaranMaster;
+use App\Models\Notification;
+use App\Models\Pegawai;
 use App\Models\Pengajuan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -132,6 +134,17 @@ class LaporanController extends Controller
         $laporan->save();
 
         if ($isKirim) {
+            // Kirim notifikasi ke semua admin bahwa ada laporan kemajuan baru masuk
+            $adminIds = Pegawai::where('role', 'admin')->pluck('id');
+            foreach ($adminIds as $adminId) {
+                Notification::create([
+                    'user_id' => $adminId,
+                    'type' => 'laporan_kemajuan',
+                    'title' => 'Laporan Kemajuan Baru Masuk',
+                    'message' => 'Laporan kemajuan untuk "' . $pengajuan->judul . '" dari ' . Auth::user()->nama . ' menunggu validasi.',
+                ]);
+            }
+
             return redirect()->route('laporan.kemajuan.sukses', $pengajuan);
         }
 
@@ -328,6 +341,17 @@ class LaporanController extends Controller
         $laporan->save();
 
         if ($isKirim) {
+            // Kirim notifikasi ke semua admin bahwa ada laporan hasil baru masuk
+            $adminIds = Pegawai::where('role', 'admin')->pluck('id');
+            foreach ($adminIds as $adminId) {
+                Notification::create([
+                    'user_id' => $adminId,
+                    'type' => 'laporan_hasil',
+                    'title' => 'Laporan Hasil Baru Masuk',
+                    'message' => 'Laporan hasil untuk "' . $pengajuan->judul . '" dari ' . Auth::user()->nama . ' menunggu validasi.',
+                ]);
+            }
+
             return redirect()->route('laporan.hasil.sukses', $pengajuan);
         }
 

@@ -88,7 +88,7 @@
                 <p class="text-slate-800 leading-relaxed whitespace-pre-line">{{ $selected->ringkasan_hasil ?? '-' }}</p>
             </div>
 
-            <!-- Status Luaran Wajib & Tambahan (Dipindah ke Kolom Kiri) -->
+            <!-- Status Luaran Wajib & Tambahan -->
             <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-6 space-y-4 text-xs">
                 <div>
                     <h3 class="font-extrabold text-slate-900 text-sm uppercase tracking-wide">
@@ -102,9 +102,10 @@
                 <div class="space-y-3 pt-1">
                     @php
                         $luaranTercapai = $selected->luaran_tercapai ?? [];
-                        $luaranList = \App\Models\LuaranMaster::where('jenis', $selected->pengajuan->jenis ?? null)
-                            ->orderByDesc('wajib')
-                            ->orderBy('id')
+                        $luaranList = $selected->pengajuan
+                            ->luaran()
+                            ->with('luaranMaster')
+                            ->orderByDesc('is_wajib')
                             ->get();
 
                         $totalLuaran = count($luaranList);
@@ -128,11 +129,12 @@
                                 <label class="flex items-center gap-2.5 cursor-pointer select-none">
                                     <input type="checkbox" disabled {{ $isChecked ? 'checked' : '' }}
                                         class="w-4 h-4 rounded text-emerald-600 border-slate-300 focus:ring-emerald-500 accent-emerald-600">
-                                    <span class="font-bold text-slate-800 text-xs">{{ $l->nama }}</span>
+                                    <span
+                                        class="font-bold text-slate-800 text-xs">{{ $l->luaranMaster->nama ?? '-' }}</span>
                                 </label>
                                 <span
-                                    class="text-[10px] font-bold px-2 py-0.5 rounded {{ $l->wajib ? 'bg-rose-50 text-rose-600' : 'bg-sky-50 text-sky-600' }} uppercase">
-                                    {{ $l->wajib ? 'Wajib' : 'Tambahan' }}
+                                    class="text-[10px] font-bold px-2 py-0.5 rounded {{ $l->is_wajib ? 'bg-rose-50 text-rose-600' : 'bg-sky-50 text-sky-600' }} uppercase">
+                                    {{ $l->is_wajib ? 'Wajib' : 'Tambahan' }}
                                 </span>
                             </div>
                             <div

@@ -171,7 +171,7 @@
                     <input type="text" form="formHasil" name="luaran[{{ $pl->id }}][link]"
                         id="linkLuaran{{ $pl->id }}" placeholder="Link / nama file bukti luaran"
                         value="{{ $existing['link'] ?? '' }}" {{ $readonly ?? false ? 'disabled' : '' }}
-                        oninput="document.getElementById('chk{{ $pl->id }}').checked = this.value.trim().length > 0">
+                        oninput="document.getElementById('chk{{ $pl->id }}').checked = this.value.trim().length > 0; updateKemajuanLuaran();">
                 </div>
             @empty
                 <div class="sub">Tidak ada luaran yang direncanakan pada pengajuan ini.</div>
@@ -179,16 +179,15 @@
 
             @php
                 $totalLuaran = count($luaranList);
-                $totalTercapai = count($laporan->luaran_tercapai ?? []);
-                $persen = $totalLuaran > 0 ? round(($totalTercapai / $totalLuaran) * 100) : 0;
             @endphp
             <div class="field" style="margin-top:14px;">
                 <label>Kemajuan Luaran</label>
                 <div style="background:#f1f5f9; border-radius:8px; height:8px; overflow:hidden;">
-                    <div style="width:{{ $persen }}%; background:#00875A; height:100%;"></div>
+                    <div id="progressBarLuaran" style="width:0%; background:#00875A; height:100%; transition:width 0.2s;">
+                    </div>
                 </div>
-                <div class="sub" style="margin-top:4px;">{{ $totalTercapai }} dari {{ $totalLuaran }} luaran terpenuhi
-                    ({{ $persen }}%)</div>
+                <div class="sub" style="margin-top:4px;" id="progressTextLuaran">0 dari {{ $totalLuaran }} luaran
+                    terpenuhi (0%)</div>
             </div>
 
             <div class="field" style="margin-top:16px;">
@@ -224,5 +223,24 @@
                     `<span>📄 ${f.name} &middot; ${Math.round(f.size/1024)} KB</span><span style="color:var(--green-700); font-weight:700;">Siap diunggah</span>`;
             }
         }
+
+        function updateKemajuanLuaran() {
+            const checkboxes = document.querySelectorAll('.luaran-item input[type="checkbox"]');
+            const total = checkboxes.length;
+            let tercapai = 0;
+            checkboxes.forEach(chk => {
+                if (chk.checked) tercapai++;
+            });
+
+            const persen = total > 0 ? Math.round((tercapai / total) * 100) : 0;
+
+            document.getElementById('progressBarLuaran').style.width = persen + '%';
+            document.getElementById('progressTextLuaran').textContent =
+                tercapai + ' dari ' + total + ' luaran terpenuhi (' + persen + '%)';
+        }
+
+        // Hitung sekali saat halaman dimuat, supaya kalau ada link yang sudah terisi
+        // sebelumnya (dari draft/reload), progress bar langsung akurat tanpa perlu diketik ulang.
+        document.addEventListener('DOMContentLoaded', updateKemajuanLuaran);
     </script>
 @endsection
