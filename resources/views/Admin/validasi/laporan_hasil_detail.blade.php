@@ -248,7 +248,7 @@
         <div class="lg:col-span-5 space-y-5 sticky top-5">
 
             <form action="{{ route('admin.validasi.laporan_hasil.update', $selected->id) }}" method="POST"
-                class="space-y-5">
+                class="space-y-5" id="formValidasiHasil">
                 @csrf
 
                 <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-6 space-y-4 text-xs">
@@ -261,7 +261,7 @@
                         <!-- Opsi Setujui -->
                         <label
                             class="flex items-start gap-3 p-3.5 rounded-xl border border-emerald-500 bg-emerald-50/20 cursor-pointer transition">
-                            <input type="radio" name="keputusan" value="setuju"
+                            <input type="radio" name="keputusan" value="setuju" id="keputusanSetuju"
                                 class="mt-0.5 w-4 h-4 text-emerald-700 border-slate-300 focus:ring-emerald-600 accent-emerald-700"
                                 {{ $selected->status == 'disetujui' ? 'checked' : '' }} required>
                             <div>
@@ -274,7 +274,7 @@
                         <!-- Opsi Revisi -->
                         <label
                             class="flex items-start gap-3 p-3.5 rounded-xl border border-slate-200 bg-white hover:border-slate-300 cursor-pointer transition">
-                            <input type="radio" name="keputusan" value="revisi"
+                            <input type="radio" name="keputusan" value="revisi" id="keputusanRevisi"
                                 class="mt-0.5 w-4 h-4 text-emerald-700 border-slate-300 focus:ring-emerald-600 accent-emerald-700"
                                 {{ $selected->status == 'revisi' ? 'checked' : '' }} required>
                             <div>
@@ -288,8 +288,9 @@
                     <div class="space-y-1.5 pt-2">
                         <label class="block font-bold text-slate-700 text-xs">Catatan / Catatan Revisi <span
                                 class="text-rose-500 font-normal">(Jika revisi wajib diisi)</span></label>
-                        <textarea name="catatan" rows="3" placeholder="Tuliskan catatan atau instruksi perbaikan..."
-                            class="w-full border border-slate-200 rounded-xl p-3 text-xs focus:outline-none focus:border-emerald-700 bg-slate-50/50 resize-none transition">{{ $pengajuan->catatan_validator ?? '' }}</textarea>
+                        <textarea name="catatan" id="catatanValidasi" rows="3"
+                            placeholder="Tuliskan catatan atau instruksi perbaikan..."
+                            class="w-full border border-slate-200 rounded-xl p-3 text-xs focus:outline-none focus:border-emerald-700 bg-slate-50/50 resize-none transition">{{ $selected->catatan_validator ?? '' }}</textarea>
                     </div>
 
                     <div class="flex items-center gap-3 pt-2">
@@ -306,4 +307,38 @@
             </form>
         </div>
     </div>
+
+    <script>
+        (function() {
+            const radioSetuju = document.getElementById('keputusanSetuju');
+            const radioRevisi = document.getElementById('keputusanRevisi');
+            const catatan = document.getElementById('catatanValidasi');
+            const form = document.getElementById('formValidasiHasil');
+
+            function syncCatatanRequired() {
+                if (radioRevisi.checked) {
+                    catatan.setAttribute('required', 'required');
+                    catatan.setCustomValidity('');
+                } else {
+                    catatan.removeAttribute('required');
+                    catatan.setCustomValidity('');
+                }
+            }
+
+            radioSetuju.addEventListener('change', syncCatatanRequired);
+            radioRevisi.addEventListener('change', syncCatatanRequired);
+
+            form.addEventListener('submit', function(e) {
+                if (radioRevisi.checked && catatan.value.trim() === '') {
+                    e.preventDefault();
+                    catatan.setCustomValidity(
+                        'Catatan revisi wajib diisi sebelum mengirim keputusan "Perlu Revisi".');
+                    catatan.reportValidity();
+                    catatan.focus();
+                }
+            });
+
+            syncCatatanRequired();
+        })();
+    </script>
 @endsection
