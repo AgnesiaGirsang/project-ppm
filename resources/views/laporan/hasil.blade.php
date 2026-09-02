@@ -175,6 +175,96 @@
             border-color: #c7d2fe;
             transform: translateY(-1px);
         }
+
+        /* Filter Bar */
+        .lh-filter-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+        }
+
+        .lh-filter-search {
+            position: relative;
+            flex: 1;
+            min-width: 220px;
+        }
+
+        .lh-filter-search svg {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 15px;
+            height: 15px;
+            color: #9ca3af;
+            pointer-events: none;
+        }
+
+        .lh-filter-search input {
+            width: 100%;
+            padding: 9px 12px 9px 34px;
+            border: 1px solid #d8dee3;
+            border-radius: 8px;
+            font-size: 13px;
+            font-family: inherit;
+            color: #1f2937;
+            transition: border-color .15s ease, box-shadow .15s ease;
+        }
+
+        .lh-filter-search input:focus {
+            outline: none;
+            border-color: #00875A;
+            box-shadow: 0 0 0 3px rgba(0, 135, 90, 0.15);
+        }
+
+        .lh-filter-year {
+            position: relative;
+        }
+
+        .lh-filter-year select {
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            padding: 9px 32px 9px 12px;
+            border: 1px solid #d8dee3;
+            border-radius: 8px;
+            font-size: 13px;
+            font-family: inherit;
+            color: #1f2937;
+            background: #fff;
+            cursor: pointer;
+            min-width: 150px;
+            transition: border-color .15s ease, box-shadow .15s ease;
+        }
+
+        .lh-filter-year select:focus {
+            outline: none;
+            border-color: #00875A;
+            box-shadow: 0 0 0 3px rgba(0, 135, 90, 0.15);
+        }
+
+        .lh-filter-year::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            right: 12px;
+            width: 7px;
+            height: 7px;
+            border-right: 2px solid #6b7280;
+            border-bottom: 2px solid #6b7280;
+            transform: translateY(-65%) rotate(45deg);
+            pointer-events: none;
+        }
+
+        .lh-filter-empty {
+            text-align: center;
+            color: var(--ink-500);
+            padding: 28px 0;
+            font-size: 13px;
+            display: none;
+        }
     </style>
 
     @if (session('success'))
@@ -197,8 +287,29 @@
                 berada di tahap Laporan Hasil akan muncul di sini. Klik "Ajukan Laporan Hasil" untuk kegiatan yang
                 belum pernah mengisi laporan.</div>
 
+            @php $tahunTersedia = $daftarKegiatan->pluck('created_at')->map(fn($t) => $t->format('Y'))->unique()->sortDesc()->values(); @endphp
+
+            <div class="lh-filter-row">
+                <div class="lh-filter-search">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <input type="text" id="lhSearchInput" placeholder="Cari judul atau kode kegiatan...">
+                </div>
+                <div class="lh-filter-year">
+                    <select id="lhYearFilter">
+                        <option value="">Semua Tahun Diajukan</option>
+                        @foreach ($tahunTersedia as $tahun)
+                            <option value="{{ $tahun }}">{{ $tahun }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+
             <div class="lh-table-wrap">
-                <table class="lh-table">
+                <table class="lh-table" id="lhTable">
                     <thead>
                         <tr>
                             <th>No</th>
@@ -212,8 +323,9 @@
                     <tbody>
                         @foreach ($daftarKegiatan as $i => $keg)
                             @php $laporan = $laporanByPengajuan->get($keg->id); @endphp
-                            <tr>
-                                <td>{{ $i + 1 }}</td>
+                            <tr data-search="{{ strtolower($keg->judul . ' ' . $keg->kode) }}"
+                                data-year="{{ $keg->created_at->format('Y') }}">
+                                <td class="lh-row-no">{{ $i + 1 }}</td>
                                 <td>
                                     <span class="lh-judul">{{ $keg->judul }}</span>
                                     <span class="lh-kode">{{ $keg->kode }}</span>
@@ -284,7 +396,44 @@
                         @endforeach
                     </tbody>
                 </table>
+                <div class="lh-filter-empty" id="lhFilterEmpty">Tidak ada kegiatan yang cocok dengan pencarian/filter.</div>
             </div>
         </div>
     @endif
+
+    <script>
+        (function() {
+            const searchInput = document.getElementById('lhSearchInput');
+            const yearFilter = document.getElementById('lhYearFilter');
+            const table = document.getElementById('lhTable');
+            const emptyState = document.getElementById('lhFilterEmpty');
+            if (!table) return;
+
+            const rows = Array.from(table.querySelectorAll('tbody tr'));
+
+            function applyFilter() {
+                const q = (searchInput.value || '').trim().toLowerCase();
+                const year = yearFilter.value;
+                let visibleCount = 0;
+                let no = 1;
+
+                rows.forEach(row => {
+                    const matchSearch = !q || row.dataset.search.includes(q);
+                    const matchYear = !year || row.dataset.year === year;
+                    const show = matchSearch && matchYear;
+                    row.style.display = show ? '' : 'none';
+                    if (show) {
+                        row.querySelector('.lh-row-no').textContent = no++;
+                        visibleCount++;
+                    }
+                });
+
+                emptyState.style.display = visibleCount === 0 ? 'block' : 'none';
+                table.style.display = visibleCount === 0 ? 'none' : '';
+            }
+
+            searchInput.addEventListener('input', applyFilter);
+            yearFilter.addEventListener('change', applyFilter);
+        })();
+    </script>
 @endsection

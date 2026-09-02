@@ -50,6 +50,21 @@ class PengajuanController extends Controller
             'proposal_path' => null,
             'proposal_nama_asli' => null,
             'proposal_size' => null,
+            'kontrak_path' => null,
+            'kontrak_nama_asli' => null,
+            'kontrak_size' => null,
+            'rab_path' => null,
+            'rab_nama_asli' => null,
+            'rab_size' => null,
+            'kwitansi_path' => null,
+            'kwitansi_nama_asli' => null,
+            'kwitansi_size' => null,
+            'bukti_pajak_path' => null,
+            'bukti_pajak_nama_asli' => null,
+            'bukti_pajak_size' => null,
+            'berita_acara_path' => null,
+            'berita_acara_nama_asli' => null,
+            'berita_acara_size' => null,
             'total_biaya' => null,
             'luaran_wajib' => [],
             'luaran_tambahan' => [],
@@ -226,25 +241,45 @@ class PengajuanController extends Controller
         $rules = ['total_biaya' => 'required|numeric|min:0'];
 
         $w = $this->wizard();
-        if (!$w['proposal_path']) {
-            $rules['proposal'] = 'required|file|mimes:pdf|max:2048';
-        } else {
-            $rules['proposal'] = 'nullable|file|mimes:pdf|max:2048';
-        }
+
+        // Dokumen wajib: proposal, kontrak, RAB, kwitansi — wajib diisi jika
+        // belum pernah diunggah sebelumnya di sesi wizard ini (boleh dilewati
+        // ulang tanpa error kalau user hanya kembali edit field lain).
+        $rules['proposal'] = $w['proposal_path'] ? 'nullable|file|mimes:pdf|max:2048' : 'required|file|mimes:pdf|max:2048';
+        $rules['kontrak'] = $w['kontrak_path'] ? 'nullable|file|mimes:pdf|max:2048' : 'required|file|mimes:pdf|max:2048';
+        $rules['rab'] = $w['rab_path'] ? 'nullable|file|mimes:pdf|max:2048' : 'required|file|mimes:pdf|max:2048';
+        $rules['kwitansi'] = $w['kwitansi_path'] ? 'nullable|file|mimes:pdf|max:2048' : 'required|file|mimes:pdf|max:2048';
+
+        // Dokumen opsional
+        $rules['bukti_pajak'] = 'nullable|file|mimes:pdf|max:2048';
+        $rules['berita_acara'] = 'nullable|file|mimes:pdf|max:2048';
 
         $data = $request->validate($rules);
 
         $update = ['total_biaya' => $data['total_biaya']];
 
-        if ($request->hasFile('proposal')) {
-            if ($w['proposal_path']) {
-                Storage::disk('public')->delete($w['proposal_path']);
+        // Daftar dokumen yang diproses seragam: [field request, prefix kolom, folder storage]
+        $dokumenList = [
+            'proposal' => ['proposal', 'proposal'],
+            'kontrak' => ['kontrak', 'kontrak'],
+            'rab' => ['rab', 'rab'],
+            'kwitansi' => ['kwitansi', 'kwitansi'],
+            'bukti_pajak' => ['bukti_pajak', 'bukti-pajak'],
+            'berita_acara' => ['berita_acara', 'berita-acara'],
+        ];
+
+        foreach ($dokumenList as $fieldName => [$kolomPrefix, $folder]) {
+            if ($request->hasFile($fieldName)) {
+                $pathLama = $w["{$kolomPrefix}_path"] ?? null;
+                if ($pathLama) {
+                    Storage::disk('public')->delete($pathLama);
+                }
+                $file = $request->file($fieldName);
+                $path = $file->store($folder, 'public');
+                $update["{$kolomPrefix}_path"] = $path;
+                $update["{$kolomPrefix}_nama_asli"] = $file->getClientOriginalName();
+                $update["{$kolomPrefix}_size"] = $file->getSize();
             }
-            $file = $request->file('proposal');
-            $path = $file->store('proposal', 'public');
-            $update['proposal_path'] = $path;
-            $update['proposal_nama_asli'] = $file->getClientOriginalName();
-            $update['proposal_size'] = $file->getSize();
         }
 
         $this->saveWizard($update);
@@ -336,7 +371,7 @@ class PengajuanController extends Controller
     {
         $w = $this->wizard();
 
-        if (!$w['jenis'] || !$w['skema_id'] || !$w['proposal_path']) {
+        if (!$w['jenis'] || !$w['skema_id'] || !$w['proposal_path'] || !$w['kontrak_path'] || !$w['rab_path'] || !$w['kwitansi_path']) {
             return redirect()->route('pengajuan.step1')->with('error', 'Data pengajuan belum lengkap.');
         }
 
@@ -358,6 +393,21 @@ class PengajuanController extends Controller
                 'proposal_path' => $w['proposal_path'],
                 'proposal_nama_asli' => $w['proposal_nama_asli'],
                 'proposal_size' => $w['proposal_size'],
+                'kontrak_path' => $w['kontrak_path'],
+                'kontrak_nama_asli' => $w['kontrak_nama_asli'],
+                'kontrak_size' => $w['kontrak_size'],
+                'rab_path' => $w['rab_path'],
+                'rab_nama_asli' => $w['rab_nama_asli'],
+                'rab_size' => $w['rab_size'],
+                'kwitansi_path' => $w['kwitansi_path'],
+                'kwitansi_nama_asli' => $w['kwitansi_nama_asli'],
+                'kwitansi_size' => $w['kwitansi_size'],
+                'bukti_pajak_path' => $w['bukti_pajak_path'],
+                'bukti_pajak_nama_asli' => $w['bukti_pajak_nama_asli'],
+                'bukti_pajak_size' => $w['bukti_pajak_size'],
+                'berita_acara_path' => $w['berita_acara_path'],
+                'berita_acara_nama_asli' => $w['berita_acara_nama_asli'],
+                'berita_acara_size' => $w['berita_acara_size'],
                 'total_biaya' => $w['total_biaya'],
                 'inovasi_produk' => $w['inovasi_produk'],
                 'tahap' => 'proposal',
@@ -447,8 +497,8 @@ class PengajuanController extends Controller
 
         return view('pengajuan.sukses', [
             'judulHalaman' => 'Pengajuan Baru',
-            'pengajuan'    => $pengajuan,
-            'kembaliUrl'   => route('pengajuan.daftar'),
+            'pengajuan' => $pengajuan,
+            'kembaliUrl' => route('pengajuan.daftar'),
             'kembaliLabel' => 'Kembali ke Daftar Proposal',
         ]);
     }
@@ -456,8 +506,10 @@ class PengajuanController extends Controller
     public function batal()
     {
         $w = $this->wizard();
-        if ($w['proposal_path']) {
-            Storage::disk('public')->delete($w['proposal_path']);
+        foreach (['proposal_path', 'kontrak_path', 'rab_path', 'kwitansi_path', 'bukti_pajak_path', 'berita_acara_path'] as $pathKey) {
+            if ($w[$pathKey]) {
+                Storage::disk('public')->delete($w[$pathKey]);
+            }
         }
         $this->resetWizard();
 

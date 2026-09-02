@@ -196,6 +196,96 @@
             justify-content: space-between;
             gap: 12px;
         }
+
+        /* Filter Bar */
+        .pp-filter-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+
+        .pp-filter-search {
+            position: relative;
+            flex: 1;
+            min-width: 220px;
+        }
+
+        .pp-filter-search svg {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 15px;
+            height: 15px;
+            color: #9ca3af;
+            pointer-events: none;
+        }
+
+        .pp-filter-search input {
+            width: 100%;
+            padding: 9px 12px 9px 34px;
+            border: 1px solid #d8dee3;
+            border-radius: 8px;
+            font-size: 13px;
+            font-family: inherit;
+            color: #1f2937;
+            transition: border-color .15s ease, box-shadow .15s ease;
+        }
+
+        .pp-filter-search input:focus {
+            outline: none;
+            border-color: #00875A;
+            box-shadow: 0 0 0 3px rgba(0, 135, 90, 0.15);
+        }
+
+        .pp-filter-year {
+            position: relative;
+        }
+
+        .pp-filter-year select {
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            padding: 9px 32px 9px 12px;
+            border: 1px solid #d8dee3;
+            border-radius: 8px;
+            font-size: 13px;
+            font-family: inherit;
+            color: #1f2937;
+            background: #fff;
+            cursor: pointer;
+            min-width: 150px;
+            transition: border-color .15s ease, box-shadow .15s ease;
+        }
+
+        .pp-filter-year select:focus {
+            outline: none;
+            border-color: #00875A;
+            box-shadow: 0 0 0 3px rgba(0, 135, 90, 0.15);
+        }
+
+        .pp-filter-year::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            right: 12px;
+            width: 7px;
+            height: 7px;
+            border-right: 2px solid #6b7280;
+            border-bottom: 2px solid #6b7280;
+            transform: translateY(-65%) rotate(45deg);
+            pointer-events: none;
+        }
+
+        .pp-filter-empty {
+            text-align: center;
+            color: var(--ink-500);
+            padding: 28px 0;
+            font-size: 13px;
+            display: none;
+        }
     </style>
 
     @if (session('success'))
@@ -227,8 +317,29 @@
             <div style="text-align:center; color:var(--ink-500); padding:32px 0; font-size:13px;">Kamu belum pernah
                 mengajukan proposal. Klik "Ajukan Proposal Baru" untuk memulai.</div>
         @else
+            @php $tahunTersedia = $daftarPengajuan->pluck('created_at')->map(fn($t) => $t->format('Y'))->unique()->sortDesc()->values(); @endphp
+
+            <div class="pp-filter-row">
+                <div class="pp-filter-search">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <input type="text" id="ppSearchInput" placeholder="Cari judul atau kode pengajuan...">
+                </div>
+                <div class="pp-filter-year">
+                    <select id="ppYearFilter">
+                        <option value="">Semua Tahun Diajukan</option>
+                        @foreach ($tahunTersedia as $tahun)
+                            <option value="{{ $tahun }}">{{ $tahun }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+
             <div class="pp-table-wrap">
-                <table class="pp-table">
+                <table class="pp-table" id="ppTable">
                     <thead>
                         <tr>
                             <th>No</th>
@@ -242,8 +353,9 @@
                     </thead>
                     <tbody>
                         @foreach ($daftarPengajuan as $i => $p)
-                            <tr>
-                                <td>{{ $i + 1 }}</td>
+                            <tr data-search="{{ strtolower($p->judul . ' ' . $p->kode) }}"
+                                data-year="{{ $p->created_at->format('Y') }}">
+                                <td class="pp-row-no">{{ $i + 1 }}</td>
                                 <td>
                                     <span class="pp-judul">{{ $p->judul }}</span>
                                     <span class="pp-kode">{{ $p->kode }}</span>
@@ -289,7 +401,45 @@
                         @endforeach
                     </tbody>
                 </table>
+                <div class="pp-filter-empty" id="ppFilterEmpty">Tidak ada pengajuan yang cocok dengan pencarian/filter.
+                </div>
             </div>
         @endif
     </div>
+
+    <script>
+        (function() {
+            const searchInput = document.getElementById('ppSearchInput');
+            const yearFilter = document.getElementById('ppYearFilter');
+            const table = document.getElementById('ppTable');
+            const emptyState = document.getElementById('ppFilterEmpty');
+            if (!table) return;
+
+            const rows = Array.from(table.querySelectorAll('tbody tr'));
+
+            function applyFilter() {
+                const q = (searchInput.value || '').trim().toLowerCase();
+                const year = yearFilter.value;
+                let visibleCount = 0;
+                let no = 1;
+
+                rows.forEach(row => {
+                    const matchSearch = !q || row.dataset.search.includes(q);
+                    const matchYear = !year || row.dataset.year === year;
+                    const show = matchSearch && matchYear;
+                    row.style.display = show ? '' : 'none';
+                    if (show) {
+                        row.querySelector('.pp-row-no').textContent = no++;
+                        visibleCount++;
+                    }
+                });
+
+                emptyState.style.display = visibleCount === 0 ? 'block' : 'none';
+                table.style.display = visibleCount === 0 ? 'none' : '';
+            }
+
+            searchInput.addEventListener('input', applyFilter);
+            yearFilter.addEventListener('change', applyFilter);
+        })();
+    </script>
 @endsection

@@ -103,10 +103,10 @@
                 Ketua & Tim
             </div>
             <div class="s5-row"><span class="k">Ketua</span><span class="v">{{ $ketua->nama }} (NIP
-                    {{ $ketua->nip }})</span></div>
+                    {{ $ketua->nip }}){{ $ketua->jurusan ? ' — ' . $ketua->jurusan : '' }}</span></div>
             @foreach ($anggotaTim as $a)
                 <div class="s5-row"><span class="k">Anggota</span><span class="v">{{ $a->nama }} (NIP
-                        {{ $a->nip }})</span></div>
+                        {{ $a->nip }}){{ $a->jurusan ? ' — ' . $a->jurusan : '' }}</span></div>
             @endforeach
             @foreach ($anggotaLuar as $luar)
                 <div class="s5-row"><span class="k">Anggota (luar sistem)</span><span
@@ -124,10 +124,22 @@
                         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
                         <polyline points="14 2 14 8 20 8" />
                     </svg></span>
-                Proposal
+                Dokumen & Anggaran
             </div>
-            <div class="s5-row"><span class="k">Dokumen</span><span class="v">{{ $w['proposal_nama_asli'] }}
+            <div class="s5-row"><span class="k">Proposal</span><span class="v">{{ $w['proposal_nama_asli'] }}
                     ({{ number_format($w['proposal_size'] / 1024, 0) }} KB)</span></div>
+            <div class="s5-row"><span class="k">Kontrak</span><span class="v">{{ $w['kontrak_nama_asli'] }}
+                    ({{ number_format($w['kontrak_size'] / 1024, 0) }} KB)</span></div>
+            <div class="s5-row"><span class="k">RAB</span><span class="v">{{ $w['rab_nama_asli'] }}
+                    ({{ number_format($w['rab_size'] / 1024, 0) }} KB)</span></div>
+            <div class="s5-row"><span class="k">Kwitansi</span><span class="v">{{ $w['kwitansi_nama_asli'] }}
+                    ({{ number_format($w['kwitansi_size'] / 1024, 0) }} KB)</span></div>
+            <div class="s5-row"><span class="k">Bukti Pajak</span><span
+                    class="v">{{ $w['bukti_pajak_nama_asli'] ? $w['bukti_pajak_nama_asli'] . ' (' . number_format($w['bukti_pajak_size'] / 1024, 0) . ' KB)' : 'Tidak diunggah' }}</span>
+            </div>
+            <div class="s5-row"><span class="k">Berita Acara / Hibah</span><span
+                    class="v">{{ $w['berita_acara_nama_asli'] ? $w['berita_acara_nama_asli'] . ' (' . number_format($w['berita_acara_size'] / 1024, 0) . ' KB)' : 'Tidak diunggah' }}</span>
+            </div>
             <div class="s5-row"><span class="k">Total Biaya Usulan</span><span class="v">Rp
                     {{ number_format($w['total_biaya'], 0, ',', '.') }}</span></div>
         </div>

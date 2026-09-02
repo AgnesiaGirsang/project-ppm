@@ -92,16 +92,12 @@
             transition: opacity .15s ease, background .15s ease;
         }
 
-        table.s4-table tbody tr:not(.s4-row-disabled):hover {
+        table.s4-table tbody tr:hover {
             background: #fafbfc;
         }
 
         table.s4-table tbody tr.s4-row-checked {
             background: #f4fbf7;
-        }
-
-        table.s4-table tbody tr.s4-row-disabled {
-            opacity: .45;
         }
 
         table.s4-table td:first-child {
@@ -176,21 +172,15 @@
                                 @foreach ($luarans as $l)
                                     @php
                                         $checkedWajib = array_key_exists($l->id, $w['luaran_wajib']);
-                                        $checkedTambahan = array_key_exists($l->id, $w['luaran_tambahan']);
                                         $opsiListWajib = is_array($l->opsi_indikator) ? $l->opsi_indikator : [];
-                                        $rowClass = $checkedWajib
-                                            ? 's4-row-checked'
-                                            : ($checkedTambahan
-                                                ? 's4-row-disabled'
-                                                : '');
+                                        $rowClass = $checkedWajib ? 's4-row-checked' : '';
                                     @endphp
                                     <tr id="row-wajib-{{ $l->id }}" class="{{ $rowClass }}">
                                         <td>
                                             <input type="checkbox" name="luaran_wajib[]" value="{{ $l->id }}"
                                                 id="wajib_check_{{ $l->id }}"
                                                 onchange="toggleLuaran({{ $l->id }}, 'wajib', this)"
-                                                {{ $checkedWajib ? 'checked' : '' }}
-                                                {{ $checkedTambahan ? 'disabled' : '' }}>
+                                                {{ $checkedWajib ? 'checked' : '' }}>
                                         </td>
                                         <td class="s4-jenis {{ $checkedWajib ? 'on' : '' }}">{{ $l->nama }}</td>
                                         <td>
@@ -206,8 +196,7 @@
                                                     @endforeach
                                                 </select>
                                             @else
-                                                <span
-                                                    class="s4-dash">{{ $checkedTambahan ? 'Sudah dipilih di Luaran Tambahan' : '-' }}</span>
+                                                <span class="s4-dash">-</span>
                                             @endif
                                         </td>
                                     </tr>
@@ -235,22 +224,16 @@
                             <tbody>
                                 @foreach ($luarans as $l)
                                     @php
-                                        $checkedWajib = array_key_exists($l->id, $w['luaran_wajib']);
                                         $checkedTambahan = array_key_exists($l->id, $w['luaran_tambahan']);
                                         $opsiListTambahan = is_array($l->opsi_indikator) ? $l->opsi_indikator : [];
-                                        $rowClass = $checkedTambahan
-                                            ? 's4-row-checked'
-                                            : ($checkedWajib
-                                                ? 's4-row-disabled'
-                                                : '');
+                                        $rowClass = $checkedTambahan ? 's4-row-checked' : '';
                                     @endphp
                                     <tr id="row-tambahan-{{ $l->id }}" class="{{ $rowClass }}">
                                         <td>
                                             <input type="checkbox" name="luaran_tambahan[]" value="{{ $l->id }}"
                                                 id="tambahan_check_{{ $l->id }}"
                                                 onchange="toggleLuaran({{ $l->id }}, 'tambahan', this)"
-                                                {{ $checkedTambahan ? 'checked' : '' }}
-                                                {{ $checkedWajib ? 'disabled' : '' }}>
+                                                {{ $checkedTambahan ? 'checked' : '' }}>
                                         </td>
                                         <td class="s4-jenis {{ $checkedTambahan ? 'on' : '' }}">{{ $l->nama }}</td>
                                         <td>
@@ -266,8 +249,7 @@
                                                     @endforeach
                                                 </select>
                                             @else
-                                                <span
-                                                    class="s4-dash">{{ $checkedWajib ? 'Sudah dipilih di Luaran Wajib' : '-' }}</span>
+                                                <span class="s4-dash">-</span>
                                             @endif
                                         </td>
                                     </tr>
@@ -296,12 +278,8 @@
 
     <script>
         function toggleLuaran(id, table, checkbox) {
-            const otherTable = table === 'wajib' ? 'tambahan' : 'wajib';
-            const otherCheckbox = document.getElementById(otherTable + '_check_' + id);
-            const otherSelect = document.getElementById(otherTable + '_opsi_' + id);
             const ownSelect = document.getElementById(table + '_opsi_' + id);
             const ownRow = document.getElementById('row-' + table + '-' + id);
-            const otherRow = document.getElementById('row-' + otherTable + '-' + id);
 
             if (ownSelect) {
                 ownSelect.disabled = !checkbox.checked;
@@ -309,20 +287,6 @@
             }
             if (ownRow) ownRow.classList.toggle('s4-row-checked', checkbox.checked);
             ownRow?.querySelector('.s4-jenis')?.classList.toggle('on', checkbox.checked);
-
-            if (otherCheckbox) {
-                otherCheckbox.disabled = checkbox.checked;
-                if (otherRow) otherRow.classList.toggle('s4-row-disabled', checkbox.checked);
-                if (checkbox.checked) {
-                    otherCheckbox.checked = false;
-                    otherRow?.classList.remove('s4-row-checked');
-                    otherRow?.querySelector('.s4-jenis')?.classList.remove('on');
-                    if (otherSelect) {
-                        otherSelect.disabled = true;
-                        otherSelect.value = '';
-                    }
-                }
-            }
         }
     </script>
 @endsection

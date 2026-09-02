@@ -70,6 +70,24 @@
             border-width: 0 2px 2px 0;
             transform: rotate(45deg);
         }
+
+        .luaran-lain-row {
+            display: flex;
+            gap: 8px;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+
+        .luaran-lain-row select,
+        .luaran-lain-row input[type="text"] {
+            flex: 1;
+        }
+
+        .luaran-lain-empty {
+            font-size: 12px;
+            color: var(--ink-500);
+            margin-bottom: 8px;
+        }
     </style>
 
     <div style="margin-bottom:14px;">
@@ -244,6 +262,28 @@
                 @endunless
             </div>
 
+            {{-- ===================== Luaran Lainnya ===================== --}}
+            <div class="field" style="margin-top:16px; padding-top:16px; border-top:1px dashed #e2e8f0;">
+                <label>Luaran Lainnya <span class="tag-opsional">OPSIONAL</span></label>
+                <div class="sub" style="margin-bottom:10px;">
+                    Luaran yang tercapai di lapangan tapi tidak direncanakan/dipilih saat pengajuan proposal bisa
+                    ditambahkan di sini. Pilih judul luaran dari daftar, lalu isi tautan buktinya.
+                </div>
+
+                <div id="luaranLainContainer"></div>
+                <div class="luaran-lain-empty" id="luaranLainEmptyMsg" style="display:none;">Belum ada luaran lain yang
+                    ditambahkan.</div>
+
+                @unless ($readonly ?? false)
+                    @if ($luaranMasterLain->isEmpty())
+                        <div class="sub">Semua luaran yang tersedia sudah dipilih saat pengajuan proposal.</div>
+                    @else
+                        <button type="button" class="btn btn-outline btn-sm" onclick="tambahLuaranLain()">+ Tambah
+                            Luaran</button>
+                    @endif
+                @endunless
+            </div>
+
             @unless ($readonly ?? false)
                 <div style="display:flex; justify-content:space-between; margin-top:20px;">
                     <button class="btn btn-primary" type="submit" form="formHasil" name="action" value="kirim">Kirim
@@ -252,6 +292,25 @@
             @endunless
         </div>
     </div>
+
+    {{-- Template baris "Luaran Lainnya" — di-clone lewat JS setiap kali baris baru ditambahkan --}}
+    <template id="templateLuaranLain">
+        <div class="luaran-lain-row">
+            <select form="formHasil" name="luaran_lain[__INDEX__][luaran_master_id]"
+                {{ $readonly ?? false ? 'disabled' : '' }}>
+                <option value="">Pilih judul luaran...</option>
+                @foreach ($luaranMasterLain as $lm)
+                    <option value="{{ $lm->id }}">{{ $lm->nama }}</option>
+                @endforeach
+            </select>
+            <input type="text" form="formHasil" name="luaran_lain[__INDEX__][link]"
+                placeholder="Link / nama file bukti luaran" {{ $readonly ?? false ? 'disabled' : '' }}>
+            @unless ($readonly ?? false)
+                <button type="button" class="btn btn-danger btn-sm" onclick="this.closest('.luaran-lain-row').remove()">
+                    Hapus</button>
+            @endunless
+        </div>
+    </template>
 
     <script>
         function showFileName(input) {
@@ -282,5 +341,27 @@
         // Hitung sekali saat halaman dimuat, supaya kalau ada link yang sudah terisi
         // sebelumnya (dari draft/reload), progress bar langsung akurat tanpa perlu diketik ulang.
         document.addEventListener('DOMContentLoaded', updateKemajuanLuaran);
+
+        // ===== Luaran Lainnya =====
+        let luaranLainIndex = 0;
+
+        function tambahLuaranLain(selectedId = '', linkVal = '') {
+            const tplHtml = document.getElementById('templateLuaranLain').innerHTML.replaceAll('__INDEX__',
+                luaranLainIndex);
+            const wrapper = document.createElement('div');
+            wrapper.innerHTML = tplHtml.trim();
+            const row = wrapper.firstElementChild;
+
+            if (selectedId) row.querySelector('select').value = selectedId;
+            if (linkVal) row.querySelector('input[type="text"]').value = linkVal;
+
+            document.getElementById('luaranLainContainer').appendChild(row);
+            luaranLainIndex++;
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const existing = @json($laporan->luaran_tambahan_lain ?? []);
+            existing.forEach(item => tambahLuaranLain(item.luaran_master_id, item.link));
+        });
     </script>
 @endsection

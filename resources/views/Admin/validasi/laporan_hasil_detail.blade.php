@@ -169,6 +169,42 @@
                 </div>
             </div>
 
+            <!-- Luaran Lainnya (Ditambahkan Dosen) -->
+            @if (!empty($selected->luaran_tambahan_lain))
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-6 space-y-4 text-xs">
+                    <div>
+                        <h3 class="font-extrabold text-slate-900 text-sm uppercase tracking-wide">
+                            Luaran Lainnya (Ditambahkan Dosen)</h3>
+                        <p class="text-[11px] text-slate-400 mt-0.5 leading-relaxed">
+                            Luaran berikut ditambahkan oleh dosen saat mengisi laporan hasil, di luar rencana luaran
+                            awal saat pengajuan proposal.
+                        </p>
+                    </div>
+
+                    <div class="space-y-3 pt-1">
+                        @foreach ($selected->luaran_tambahan_lain as $item)
+                            @php $lm = \App\Models\LuaranMaster::find($item['luaran_master_id'] ?? null); @endphp
+                            <div class="p-3.5 bg-amber-50/40 rounded-xl border border-amber-200/70 space-y-2.5">
+                                <div class="flex items-center justify-between gap-3">
+                                    <span
+                                        class="font-bold text-slate-800 text-xs">{{ $lm->nama ?? 'Luaran tidak ditemukan' }}</span>
+                                    <span
+                                        class="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-700 uppercase">
+                                        Tambahan Dosen</span>
+                                </div>
+                                @if (!empty($item['link']))
+                                    <a href="{{ $item['link'] }}" target="_blank" rel="noopener"
+                                        class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-emerald-700 text-xs truncate block hover:underline hover:bg-emerald-50/40 transition">
+                                        <i
+                                            class="fa-solid fa-arrow-up-right-from-square text-[10px] mr-1"></i>{{ $item['link'] }}
+                                    </a>
+                                @endif
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
             <!-- Dokumen Laporan Hasil (PDF) -->
             <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-6 space-y-3 text-xs">
                 <h3
@@ -248,7 +284,7 @@
         <div class="lg:col-span-5 space-y-5 sticky top-5">
 
             <form action="{{ route('admin.validasi.laporan_hasil.update', $selected->id) }}" method="POST"
-                class="space-y-5" id="formValidasiHasil">
+                class="space-y-5">
                 @csrf
 
                 <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-6 space-y-4 text-xs">
@@ -261,7 +297,7 @@
                         <!-- Opsi Setujui -->
                         <label
                             class="flex items-start gap-3 p-3.5 rounded-xl border border-emerald-500 bg-emerald-50/20 cursor-pointer transition">
-                            <input type="radio" name="keputusan" value="setuju" id="keputusanSetuju"
+                            <input type="radio" name="keputusan" value="setuju"
                                 class="mt-0.5 w-4 h-4 text-emerald-700 border-slate-300 focus:ring-emerald-600 accent-emerald-700"
                                 {{ $selected->status == 'disetujui' ? 'checked' : '' }} required>
                             <div>
@@ -274,7 +310,7 @@
                         <!-- Opsi Revisi -->
                         <label
                             class="flex items-start gap-3 p-3.5 rounded-xl border border-slate-200 bg-white hover:border-slate-300 cursor-pointer transition">
-                            <input type="radio" name="keputusan" value="revisi" id="keputusanRevisi"
+                            <input type="radio" name="keputusan" value="revisi"
                                 class="mt-0.5 w-4 h-4 text-emerald-700 border-slate-300 focus:ring-emerald-600 accent-emerald-700"
                                 {{ $selected->status == 'revisi' ? 'checked' : '' }} required>
                             <div>
@@ -288,8 +324,7 @@
                     <div class="space-y-1.5 pt-2">
                         <label class="block font-bold text-slate-700 text-xs">Catatan / Catatan Revisi <span
                                 class="text-rose-500 font-normal">(Jika revisi wajib diisi)</span></label>
-                        <textarea name="catatan" id="catatanValidasi" rows="3"
-                            placeholder="Tuliskan catatan atau instruksi perbaikan..."
+                        <textarea name="catatan" rows="3" placeholder="Tuliskan catatan atau instruksi perbaikan..."
                             class="w-full border border-slate-200 rounded-xl p-3 text-xs focus:outline-none focus:border-emerald-700 bg-slate-50/50 resize-none transition">{{ $selected->catatan_validator ?? '' }}</textarea>
                     </div>
 
@@ -305,40 +340,34 @@
                     </div>
                 </div>
             </form>
+
+            {{-- ===================== RIWAYAT VALIDASI ===================== --}}
+            @if ($selected->divalidasi_oleh)
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-6 space-y-3 text-xs">
+                    <h3
+                        class="font-extrabold text-slate-900 text-sm uppercase tracking-wide border-b border-slate-100 pb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-clock-rotate-left text-emerald-600"></i> Riwayat Validasi
+                    </h3>
+                    <div class="flex items-center gap-3 p-3.5 bg-slate-50/70 rounded-xl border border-slate-100">
+                        <div
+                            class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center font-extrabold text-sm shrink-0">
+                            {{ strtoupper(substr($selected->validator->nama ?? '?', 0, 1)) }}
+                        </div>
+                        <div class="min-w-0">
+                            <p class="font-bold text-slate-900 text-xs truncate">
+                                {{ $selected->validator->nama ?? 'Admin (akun dihapus)' }}
+                            </p>
+                            <p class="text-[11px] text-slate-500 mt-0.5">
+                                {{ $selected->status === 'disetujui' ? 'Menyetujui laporan hasil ini' : 'Meminta revisi laporan hasil ini' }}
+                            </p>
+                            <p class="text-[11px] text-slate-400 mt-0.5">
+                                <i class="fa-regular fa-clock text-[10px]"></i>
+                                {{ $selected->divalidasi_pada ? $selected->divalidasi_pada->format('d F Y, H:i') . ' WIB' : '-' }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            @endif
         </div>
     </div>
-
-    <script>
-        (function() {
-            const radioSetuju = document.getElementById('keputusanSetuju');
-            const radioRevisi = document.getElementById('keputusanRevisi');
-            const catatan = document.getElementById('catatanValidasi');
-            const form = document.getElementById('formValidasiHasil');
-
-            function syncCatatanRequired() {
-                if (radioRevisi.checked) {
-                    catatan.setAttribute('required', 'required');
-                    catatan.setCustomValidity('');
-                } else {
-                    catatan.removeAttribute('required');
-                    catatan.setCustomValidity('');
-                }
-            }
-
-            radioSetuju.addEventListener('change', syncCatatanRequired);
-            radioRevisi.addEventListener('change', syncCatatanRequired);
-
-            form.addEventListener('submit', function(e) {
-                if (radioRevisi.checked && catatan.value.trim() === '') {
-                    e.preventDefault();
-                    catatan.setCustomValidity(
-                        'Catatan revisi wajib diisi sebelum mengirim keputusan "Perlu Revisi".');
-                    catatan.reportValidity();
-                    catatan.focus();
-                }
-            });
-
-            syncCatatanRequired();
-        })();
-    </script>
 @endsection

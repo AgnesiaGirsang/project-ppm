@@ -58,6 +58,7 @@
                             <th class="py-3.5 px-6">Pengusul / Ketua</th>
                             <th class="py-3.5 px-6">Tanggal Masuk</th>
                             <th class="py-3.5 px-6">Status Validasi</th>
+                            <th class="py-3.5 px-6">Divalidasi Oleh</th>
                             <th class="py-3.5 px-6 text-center">Aksi</th>
                         </tr>
                     </thead>
@@ -116,6 +117,19 @@
                                     @endif
                                 </td>
 
+                                <!-- DIVALIDASI OLEH -->
+                                <td class="py-4 px-6 whitespace-nowrap">
+                                    @if ($item->divalidasi_oleh)
+                                        <span
+                                            class="font-bold text-slate-900 block">{{ $item->validator->name ?? 'Admin' }}</span>
+                                        <span class="text-[10px] text-slate-400 block mt-0.5">
+                                            {{ $item->divalidasi_pada ? $item->divalidasi_pada->format('d/m/Y H:i') : '-' }}
+                                        </span>
+                                    @else
+                                        <span class="text-slate-400 italic">Belum divalidasi</span>
+                                    @endif
+                                </td>
+
                                 <!-- TOMBOL AKSI (VALIDASI) -->
                                 <td class="py-4 px-6 text-center whitespace-nowrap">
                                     <a href="{{ route('admin.validasi.proposal.detail', $item->id) }}"
@@ -126,7 +140,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="text-center py-12 text-slate-400 italic">
+                                <td colspan="7" class="text-center py-12 text-slate-400 italic">
                                     <div class="flex flex-col items-center justify-center space-y-2">
                                         <i class="fa-regular fa-folder-open text-3xl text-slate-300"></i>
                                         <p>Belum ada data pengajuan proposal yang masuk.</p>

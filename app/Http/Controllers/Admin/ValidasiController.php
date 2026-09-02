@@ -19,7 +19,7 @@ class ValidasiController extends Controller
     {
         $title = 'Daftar Validasi Proposal';
 
-        $query = Pengajuan::with(['pegawai', 'skema', 'rumpunIlmu']);
+        $query = Pengajuan::with(['pegawai', 'skema', 'rumpunIlmu', 'validator']);
 
         // Fitur Sorting Terbaru / Terlama (Default: Terbaru)
         $sort = $request->get('sort', 'latest');
@@ -38,7 +38,7 @@ class ValidasiController extends Controller
     {
         $title = 'Validasi Proposal';
 
-        $pengajuan = Pengajuan::with(['pegawai', 'skema', 'rumpunIlmu', 'tim.pegawai', 'luaran.luaranMaster'])->findOrFail($id);
+        $pengajuan = Pengajuan::with(['pegawai', 'skema', 'rumpunIlmu', 'tim.pegawai', 'luaran.luaranMaster', 'validator'])->findOrFail($id);
         $selected = $pengajuan;
 
         return view('Admin.validasi.proposal_detail', compact('title', 'pengajuan', 'selected'));
@@ -58,6 +58,9 @@ class ValidasiController extends Controller
         $dataUpdate = [
             'status' => $statusBaru,
             'catatan_validator' => $request->catatan,
+            // Gate langsung dari akun admin yang login — tidak bisa dipilih manual
+            'divalidasi_oleh' => auth()->id(),
+            'divalidasi_pada' => now(),
         ];
 
         // Jalur Mandiri hanya punya 2 tahap (Proposal -> Laporan Hasil),
@@ -96,7 +99,7 @@ class ValidasiController extends Controller
     {
         $title = 'Daftar Validasi Laporan Kemajuan';
 
-        $query = LaporanKemajuan::with(['pengajuan.pegawai', 'pengajuan.skema']);
+        $query = LaporanKemajuan::with(['pengajuan.pegawai', 'pengajuan.skema', 'validator']);
 
         $sort = $request->get('sort', 'latest');
         if ($sort == 'oldest') {
@@ -114,7 +117,7 @@ class ValidasiController extends Controller
     {
         $title = 'Validasi Laporan Kemajuan';
 
-        $laporan = LaporanKemajuan::with(['pengajuan.pegawai', 'pengajuan.skema'])->findOrFail($id);
+        $laporan = LaporanKemajuan::with(['pengajuan.pegawai', 'pengajuan.skema', 'validator'])->findOrFail($id);
         $selected = $laporan;
 
         return view('Admin.validasi.laporan_kemajuan_detail', compact('title', 'laporan', 'selected'));
@@ -133,7 +136,9 @@ class ValidasiController extends Controller
 
         $laporan->update([
             'status' => $statusBaru,
-            'catatan_validator' => $request->catatan
+            'catatan_validator' => $request->catatan,
+            'divalidasi_oleh' => auth()->id(),
+            'divalidasi_pada' => now(),
         ]);
 
         $pengajuan = $laporan->pengajuan;
@@ -171,7 +176,7 @@ class ValidasiController extends Controller
     {
         $title = 'Daftar Validasi Laporan Hasil';
 
-        $query = LaporanHasil::with(['pengajuan.pegawai', 'pengajuan.skema']);
+        $query = LaporanHasil::with(['pengajuan.pegawai', 'pengajuan.skema', 'validator']);
 
         $sort = $request->get('sort', 'latest');
         if ($sort == 'oldest') {
@@ -189,7 +194,7 @@ class ValidasiController extends Controller
     {
         $title = 'Validasi Laporan Hasil';
 
-        $laporan = LaporanHasil::with(['pengajuan.pegawai', 'pengajuan.skema'])->findOrFail($id);
+        $laporan = LaporanHasil::with(['pengajuan.pegawai', 'pengajuan.skema', 'validator'])->findOrFail($id);
         $selected = $laporan;
 
         return view('Admin.validasi.laporan_hasil_detail', compact('title', 'laporan', 'selected'));
@@ -208,7 +213,9 @@ class ValidasiController extends Controller
 
         $laporan->update([
             'status' => $statusBaru,
-            'catatan_validator' => $request->catatan
+            'catatan_validator' => $request->catatan,
+            'divalidasi_oleh' => auth()->id(),
+            'divalidasi_pada' => now(),
         ]);
 
         $pengajuan = $laporan->pengajuan;

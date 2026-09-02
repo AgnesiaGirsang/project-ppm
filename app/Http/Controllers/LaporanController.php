@@ -249,11 +249,21 @@ class LaporanController extends Controller
         $laporan = $pengajuan->laporanHasil;
         $readonly = $laporan && in_array($laporan->status, ['proses', 'disetujui']);
 
+        // Daftar luaran master di luar yang sudah dipilih saat pengajuan proposal —
+        // dipakai untuk fitur "Luaran Lainnya" supaya dosen bisa menambahkan bukti
+        // luaran yang tercapai di lapangan meski tidak direncanakan di awal.
+        $luaranMasterDipilihIds = $pengajuan->luaran->pluck('luaran_master_id');
+        $luaranMasterLain = LuaranMaster::where('jenis', $pengajuan->jenis)
+            ->whereNotIn('id', $luaranMasterDipilihIds)
+            ->orderBy('nama')
+            ->get();
+
         return view('laporan.form', [
             'tipe' => $tipe,
             'pengajuan' => $pengajuan,
             'laporan' => $laporan,
             'luaranList' => $pengajuan->luaran,
+            'luaranMasterLain' => $luaranMasterLain,
             'readonly' => $readonly,
             'judulHalaman' => 'Laporan Hasil',
         ]);
@@ -284,6 +294,9 @@ class LaporanController extends Controller
             'ringkasan_hasil' => 'nullable|string',
             'luaran' => 'nullable|array',
             'luaran.*.link' => 'nullable|string|max:500',
+            'luaran_lain' => 'nullable|array',
+            'luaran_lain.*.luaran_master_id' => 'nullable|exists:luaran_masters,id',
+            'luaran_lain.*.link' => 'nullable|string|max:500',
             'file' => 'nullable|file|mimes:pdf|max:2048',
             'dokumentasi.*' => 'nullable|image|max:5120',
         ];
@@ -309,6 +322,20 @@ class LaporanController extends Controller
             }
         }
 
+        // Luaran tambahan di luar rencana awal proposal — hanya baris yang
+        // judul luaran-nya dipilih DAN link-nya diisi yang disimpan.
+        $luaranTambahanLain = [];
+        foreach ($request->input('luaran_lain', []) as $item) {
+            $masterId = $item['luaran_master_id'] ?? null;
+            $link = trim($item['link'] ?? '');
+            if ($masterId && $link !== '') {
+                $luaranTambahanLain[] = [
+                    'luaran_master_id' => (int) $masterId,
+                    'link' => $link,
+                ];
+            }
+        }
+
         $totalLuaran = $pengajuan->luaran()->count();
         $persentaseOtomatis = $totalLuaran > 0 ? (int) round(count($luaranTercapai) / $totalLuaran * 100) : 0;
 
@@ -319,6 +346,7 @@ class LaporanController extends Controller
         $laporan->link_inovasi_produk = $data['link_inovasi_produk'] ?? $laporan->link_inovasi_produk;
         $laporan->no_sk = $data['no_sk'] ?? $laporan->no_sk;
         $laporan->luaran_tercapai = $luaranTercapai;
+        $laporan->luaran_tambahan_lain = $luaranTambahanLain;
         $laporan->status = $isKirim ? 'proses' : 'draft';
         $laporan->catatan_validator = null;
 

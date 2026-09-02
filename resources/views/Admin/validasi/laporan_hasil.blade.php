@@ -62,6 +62,7 @@
                             <th class="p-3.5">Pengusul / Ketua</th>
                             <th class="p-3.5">Tanggal Masuk</th>
                             <th class="p-3.5 text-center">Status Validasi</th>
+                            <th class="p-3.5">Divalidasi Oleh</th>
                             <th class="p-3.5 text-center">Aksi</th>
                         </tr>
                     </thead>
@@ -121,6 +122,19 @@
                                     </span>
                                 </td>
 
+                                <!-- Divalidasi Oleh -->
+                                <td class="p-3.5 whitespace-nowrap">
+                                    @if ($item->divalidasi_oleh)
+                                        <span
+                                            class="font-bold text-slate-900 block">{{ $item->validator->name ?? 'Admin' }}</span>
+                                        <span class="text-[10px] text-slate-400 block mt-0.5">
+                                            {{ $item->divalidasi_pada ? $item->divalidasi_pada->format('d/m/Y H:i') : '-' }}
+                                        </span>
+                                    @else
+                                        <span class="text-slate-400 italic">Belum divalidasi</span>
+                                    @endif
+                                </td>
+
                                 <!-- Tombol Aksi -->
                                 <td class="p-3.5 text-center whitespace-nowrap">
                                     <a href="{{ route('admin.validasi.laporan_hasil.detail', $item->id) }}"
@@ -132,7 +146,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="p-8 text-center text-slate-400 font-medium">
+                                <td colspan="7" class="p-8 text-center text-slate-400 font-medium">
                                     <div class="flex flex-col items-center justify-center space-y-1">
                                         <i class="fa-solid fa-folder-open text-slate-300 text-3xl mb-1"></i>
                                         <span>Belum ada berkas laporan hasil yang masuk.</span>

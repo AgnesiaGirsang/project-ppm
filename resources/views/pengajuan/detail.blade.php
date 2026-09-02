@@ -45,15 +45,15 @@
                 <div class="review-row">
                     <span class="k">{{ $t->peran === 'ketua' ? 'Ketua' : 'Anggota' }}</span>
                     <span
-                        class="v">{{ $t->namaTampil() }}{{ $t->nipTampil() ? ' (' . $t->nipTampil() . ')' : '' }}{{ !$t->isDariSistem() ? ' — luar sistem' : '' }}</span>
+                        class="v">{{ $t->namaTampil() }}{{ $t->nipTampil() ? ' (' . $t->nipTampil() . ')' : '' }}{{ $t->isDariSistem() && $t->pegawai?->jurusan ? ' — ' . $t->pegawai->jurusan : '' }}{{ !$t->isDariSistem() ? ' — luar sistem' : '' }}</span>
                 </div>
             @endforeach
         </div>
 
         <div class="review-section">
-            <h4>Proposal</h4>
+            <h4>Dokumen & Anggaran</h4>
             <div class="review-row">
-                <span class="k">Dokumen</span>
+                <span class="k">Dokumen Proposal</span>
                 <span class="v">
                     @if ($p->proposal_path)
                         <a href="{{ asset('storage/' . $p->proposal_path) }}" target="_blank"
@@ -61,6 +61,66 @@
                         ({{ number_format($p->proposal_size / 1024, 0) }} KB)
                     @else
                         Belum ada dokumen
+                    @endif
+                </span>
+            </div>
+            <div class="review-row">
+                <span class="k">Dokumen Kontrak</span>
+                <span class="v">
+                    @if ($p->kontrak_path)
+                        <a href="{{ asset('storage/' . $p->kontrak_path) }}" target="_blank"
+                            style="color:var(--green-700); font-weight:700;">{{ $p->kontrak_nama_asli }}</a>
+                        ({{ number_format($p->kontrak_size / 1024, 0) }} KB)
+                    @else
+                        Belum ada dokumen
+                    @endif
+                </span>
+            </div>
+            <div class="review-row">
+                <span class="k">Dokumen RAB</span>
+                <span class="v">
+                    @if ($p->rab_path)
+                        <a href="{{ asset('storage/' . $p->rab_path) }}" target="_blank"
+                            style="color:var(--green-700); font-weight:700;">{{ $p->rab_nama_asli }}</a>
+                        ({{ number_format($p->rab_size / 1024, 0) }} KB)
+                    @else
+                        Belum ada dokumen
+                    @endif
+                </span>
+            </div>
+            <div class="review-row">
+                <span class="k">Dokumen Kwitansi</span>
+                <span class="v">
+                    @if ($p->kwitansi_path)
+                        <a href="{{ asset('storage/' . $p->kwitansi_path) }}" target="_blank"
+                            style="color:var(--green-700); font-weight:700;">{{ $p->kwitansi_nama_asli }}</a>
+                        ({{ number_format($p->kwitansi_size / 1024, 0) }} KB)
+                    @else
+                        Belum ada dokumen
+                    @endif
+                </span>
+            </div>
+            <div class="review-row">
+                <span class="k">Bukti Pajak</span>
+                <span class="v">
+                    @if ($p->bukti_pajak_path)
+                        <a href="{{ asset('storage/' . $p->bukti_pajak_path) }}" target="_blank"
+                            style="color:var(--green-700); font-weight:700;">{{ $p->bukti_pajak_nama_asli }}</a>
+                        ({{ number_format($p->bukti_pajak_size / 1024, 0) }} KB)
+                    @else
+                        Tidak ada dokumen
+                    @endif
+                </span>
+            </div>
+            <div class="review-row">
+                <span class="k">Berita Acara / Hibah</span>
+                <span class="v">
+                    @if ($p->berita_acara_path)
+                        <a href="{{ asset('storage/' . $p->berita_acara_path) }}" target="_blank"
+                            style="color:var(--green-700); font-weight:700;">{{ $p->berita_acara_nama_asli }}</a>
+                        ({{ number_format($p->berita_acara_size / 1024, 0) }} KB)
+                    @else
+                        Tidak ada dokumen
                     @endif
                 </span>
             </div>

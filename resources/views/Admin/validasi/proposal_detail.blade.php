@@ -193,6 +193,87 @@
                 </div>
             </div>
 
+            <!-- 3B. DOKUMEN PENDUKUNG (Kontrak, RAB, Kwitansi, Bukti Pajak, Berita Acara/Hibah) -->
+            <div class="bg-white rounded-2xl shadow-xs border border-slate-200 p-6">
+                <h3 class="font-bold text-slate-800 mb-4 flex items-center gap-2 text-xs uppercase tracking-wider">
+                    <i class="fa-solid fa-folder-open text-emerald-600"></i> Dokumen Pendukung
+                </h3>
+
+                <div class="space-y-3">
+                    @php
+                        $dokumenPendukung = [
+                            [
+                                'label' => 'Kontrak',
+                                'path' => $pengajuan->kontrak_path,
+                                'nama' => $pengajuan->kontrak_nama_asli,
+                                'wajib' => true,
+                            ],
+                            [
+                                'label' => 'RAB (Rencana Anggaran Biaya)',
+                                'path' => $pengajuan->rab_path,
+                                'nama' => $pengajuan->rab_nama_asli,
+                                'wajib' => true,
+                            ],
+                            [
+                                'label' => 'Kwitansi',
+                                'path' => $pengajuan->kwitansi_path,
+                                'nama' => $pengajuan->kwitansi_nama_asli,
+                                'wajib' => true,
+                            ],
+                            [
+                                'label' => 'Bukti Pajak',
+                                'path' => $pengajuan->bukti_pajak_path,
+                                'nama' => $pengajuan->bukti_pajak_nama_asli,
+                                'wajib' => false,
+                            ],
+                            [
+                                'label' => 'Berita Acara / Hibah',
+                                'path' => $pengajuan->berita_acara_path,
+                                'nama' => $pengajuan->berita_acara_nama_asli,
+                                'wajib' => false,
+                            ],
+                        ];
+                    @endphp
+
+                    @foreach ($dokumenPendukung as $dok)
+                        <div
+                            class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-xl border border-slate-200/60 bg-slate-50/50">
+                            <div class="flex items-center gap-3 overflow-hidden">
+                                <div
+                                    class="p-3 rounded-xl shrink-0 {{ $dok['path'] ? 'bg-red-50 text-red-600' : 'bg-slate-100 text-slate-400' }}">
+                                    <i class="fa-solid fa-file-pdf text-xl"></i>
+                                </div>
+                                <div class="truncate">
+                                    <p class="font-bold text-slate-700 text-xs truncate flex items-center gap-2">
+                                        {{ $dok['label'] }}
+                                        <span
+                                            class="text-[9px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider {{ $dok['wajib'] ? 'bg-rose-50 text-rose-600' : 'bg-sky-50 text-sky-600' }}">
+                                            {{ $dok['wajib'] ? 'Wajib' : 'Opsional' }}
+                                        </span>
+                                    </p>
+                                    <p class="text-[11px] text-slate-400 truncate">
+                                        {{ $dok['path'] ? $dok['nama'] : 'Belum diunggah' }}
+                                    </p>
+                                </div>
+                            </div>
+
+                            @if ($dok['path'])
+                                <div class="flex items-center gap-2 w-full sm:w-auto justify-end shrink-0">
+                                    <a href="{{ asset('storage/' . $dok['path']) }}" target="_blank"
+                                        class="px-3.5 py-2 text-xs font-bold text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition flex items-center gap-1.5 shadow-2xs">
+                                        <i class="fa-solid fa-eye text-slate-500"></i> Pratinjau
+                                    </a>
+                                    <a href="{{ asset('storage/' . $dok['path']) }}" download
+                                        class="px-3.5 py-2 text-xs font-bold text-white bg-emerald-800 rounded-xl hover:bg-emerald-900 transition flex items-center gap-1.5 shadow-sm">
+                                        <i class="fa-solid fa-download"></i> Unduh
+                                    </a>
+                                </div>
+                            @endif
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+
             <!-- 4. LUARAN YANG DIRENCANAKAN -->
             <div class="bg-white rounded-2xl shadow-xs border border-slate-200 p-6">
                 <div class="flex items-center gap-2.5 mb-5 pb-3 border-b border-slate-100">
@@ -254,8 +335,8 @@
 
         <!-- KOLOM KANAN: Form Keputusan Validasi Proposal (Sticky) - 5 Kolom -->
         <div class="lg:col-span-5 space-y-5 sticky top-5">
-            <form action="{{ route('admin.validasi.proposal.update', $pengajuan->id) }}" method="POST" class="space-y-5"
-                id="formValidasiProposal">
+            <form action="{{ route('admin.validasi.proposal.update', $pengajuan->id) }}" method="POST"
+                class="space-y-5" id="formValidasiProposal">
                 @csrf
 
                 <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-6 space-y-4 text-xs">
@@ -312,6 +393,34 @@
                     </div>
                 </div>
             </form>
+
+            {{-- ===================== RIWAYAT VALIDASI ===================== --}}
+            @if ($pengajuan->divalidasi_oleh)
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-6 space-y-3 text-xs">
+                    <h3
+                        class="font-extrabold text-slate-900 text-sm uppercase tracking-wide border-b border-slate-100 pb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-clock-rotate-left text-emerald-600"></i> Riwayat Validasi
+                    </h3>
+                    <div class="flex items-center gap-3 p-3.5 bg-slate-50/70 rounded-xl border border-slate-100">
+                        <div
+                            class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center font-extrabold text-sm shrink-0">
+                            {{ strtoupper(substr($pengajuan->validator->nama ?? '?', 0, 1)) }}
+                        </div>
+                        <div class="min-w-0">
+                            <p class="font-bold text-slate-900 text-xs truncate">
+                                {{ $pengajuan->validator->nama ?? 'Admin (akun dihapus)' }}
+                            </p>
+                            <p class="text-[11px] text-slate-500 mt-0.5">
+                                {{ $pengajuan->status === 'disetujui' ? 'Menyetujui proposal ini' : 'Meminta revisi proposal ini' }}
+                            </p>
+                            <p class="text-[11px] text-slate-400 mt-0.5">
+                                <i class="fa-regular fa-clock text-[10px]"></i>
+                                {{ $pengajuan->divalidasi_pada ? $pengajuan->divalidasi_pada->format('d F Y, H:i') . ' WIB' : '-' }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            @endif
         </div><!-- End of Kolom Kanan -->
 
     </div>

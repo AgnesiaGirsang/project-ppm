@@ -178,6 +178,96 @@
             border-color: #c7d2fe;
             transform: translateY(-1px);
         }
+
+        /* Filter Bar */
+        .lk-filter-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+        }
+
+        .lk-filter-search {
+            position: relative;
+            flex: 1;
+            min-width: 220px;
+        }
+
+        .lk-filter-search svg {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 15px;
+            height: 15px;
+            color: #9ca3af;
+            pointer-events: none;
+        }
+
+        .lk-filter-search input {
+            width: 100%;
+            padding: 9px 12px 9px 34px;
+            border: 1px solid #d8dee3;
+            border-radius: 8px;
+            font-size: 13px;
+            font-family: inherit;
+            color: #1f2937;
+            transition: border-color .15s ease, box-shadow .15s ease;
+        }
+
+        .lk-filter-search input:focus {
+            outline: none;
+            border-color: #00875A;
+            box-shadow: 0 0 0 3px rgba(0, 135, 90, 0.15);
+        }
+
+        .lk-filter-year {
+            position: relative;
+        }
+
+        .lk-filter-year select {
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            padding: 9px 32px 9px 12px;
+            border: 1px solid #d8dee3;
+            border-radius: 8px;
+            font-size: 13px;
+            font-family: inherit;
+            color: #1f2937;
+            background: #fff;
+            cursor: pointer;
+            min-width: 150px;
+            transition: border-color .15s ease, box-shadow .15s ease;
+        }
+
+        .lk-filter-year select:focus {
+            outline: none;
+            border-color: #00875A;
+            box-shadow: 0 0 0 3px rgba(0, 135, 90, 0.15);
+        }
+
+        .lk-filter-year::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            right: 12px;
+            width: 7px;
+            height: 7px;
+            border-right: 2px solid #6b7280;
+            border-bottom: 2px solid #6b7280;
+            transform: translateY(-65%) rotate(45deg);
+            pointer-events: none;
+        }
+
+        .lk-filter-empty {
+            text-align: center;
+            color: var(--ink-500);
+            padding: 28px 0;
+            font-size: 13px;
+            display: none;
+        }
     </style>
 
     @if (session('success'))
@@ -199,8 +289,29 @@
                 Simlitabkes yang sudah lolos validasi proposal admin akan muncul di sini. Klik "Ajukan Laporan
                 Kemajuan" untuk kegiatan yang belum pernah mengisi laporan.</div>
 
+            @php $tahunTersedia = $daftarKegiatan->pluck('created_at')->map(fn($t) => $t->format('Y'))->unique()->sortDesc()->values(); @endphp
+
+            <div class="lk-filter-row">
+                <div class="lk-filter-search">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <input type="text" id="lkSearchInput" placeholder="Cari judul atau kode kegiatan...">
+                </div>
+                <div class="lk-filter-year">
+                    <select id="lkYearFilter">
+                        <option value="">Semua Tahun Diajukan</option>
+                        @foreach ($tahunTersedia as $tahun)
+                            <option value="{{ $tahun }}">{{ $tahun }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+
             <div class="lk-table-wrap">
-                <table class="lk-table">
+                <table class="lk-table" id="lkTable">
                     <thead>
                         <tr>
                             <th>No</th>
@@ -214,8 +325,9 @@
                     <tbody>
                         @foreach ($daftarKegiatan as $i => $keg)
                             @php $laporan = $laporanByPengajuan->get($keg->id); @endphp
-                            <tr>
-                                <td>{{ $i + 1 }}</td>
+                            <tr data-search="{{ strtolower($keg->judul . ' ' . $keg->kode) }}"
+                                data-year="{{ $keg->created_at->format('Y') }}">
+                                <td class="lk-row-no">{{ $i + 1 }}</td>
                                 <td>
                                     <span class="lk-judul">{{ $keg->judul }}</span>
                                     <span class="lk-kode">{{ $keg->kode }}</span>
@@ -295,7 +407,45 @@
                         @endforeach
                     </tbody>
                 </table>
+                <div class="lk-filter-empty" id="lkFilterEmpty">Tidak ada kegiatan yang cocok dengan pencarian/filter.
+                </div>
             </div>
         </div>
     @endif
+
+    <script>
+        (function() {
+            const searchInput = document.getElementById('lkSearchInput');
+            const yearFilter = document.getElementById('lkYearFilter');
+            const table = document.getElementById('lkTable');
+            const emptyState = document.getElementById('lkFilterEmpty');
+            if (!table) return;
+
+            const rows = Array.from(table.querySelectorAll('tbody tr'));
+
+            function applyFilter() {
+                const q = (searchInput.value || '').trim().toLowerCase();
+                const year = yearFilter.value;
+                let visibleCount = 0;
+                let no = 1;
+
+                rows.forEach(row => {
+                    const matchSearch = !q || row.dataset.search.includes(q);
+                    const matchYear = !year || row.dataset.year === year;
+                    const show = matchSearch && matchYear;
+                    row.style.display = show ? '' : 'none';
+                    if (show) {
+                        row.querySelector('.lk-row-no').textContent = no++;
+                        visibleCount++;
+                    }
+                });
+
+                emptyState.style.display = visibleCount === 0 ? 'block' : 'none';
+                table.style.display = visibleCount === 0 ? 'none' : '';
+            }
+
+            searchInput.addEventListener('input', applyFilter);
+            yearFilter.addEventListener('change', applyFilter);
+        })();
+    </script>
 @endsection
