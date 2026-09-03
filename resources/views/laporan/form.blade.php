@@ -88,6 +88,112 @@
             color: var(--ink-500);
             margin-bottom: 8px;
         }
+
+        /* ===== Upload box compact — horizontal, hemat ruang ===== */
+        .upload-box {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 11px 14px;
+            border: 1.5px dashed #cbd5e1;
+            border-radius: 10px;
+            background: #fafbfc;
+            cursor: pointer;
+            transition: border-color .15s ease, background .15s ease;
+        }
+
+        .upload-box:hover {
+            border-color: #00875A;
+            background: #f4faf7;
+        }
+
+        .upload-box .ub-icon {
+            width: 34px;
+            height: 34px;
+            min-width: 34px;
+            border-radius: 8px;
+            background: #e6f4ee;
+            color: #00875A;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+        }
+
+        .upload-box .ub-text {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .upload-box .ub-text b {
+            display: block;
+            font-size: 12.5px;
+            color: #111827;
+            font-weight: 700;
+        }
+
+        .upload-box .ub-text span {
+            display: block;
+            font-size: 11px;
+            color: #6b7280;
+            margin-top: 1px;
+        }
+
+        .upload-box .ub-btn {
+            flex-shrink: 0;
+            font-size: 11.5px;
+            font-weight: 700;
+            color: #00875A;
+            background: #e6f4ee;
+            padding: 6px 12px;
+            border-radius: 7px;
+        }
+
+        .upload-field {
+            margin-bottom: 18px;
+        }
+
+        .upload-field-label {
+            display: flex;
+            align-items: center;
+            font-size: 12.5px;
+            font-weight: 700;
+            color: #111827;
+            margin-bottom: 4px;
+        }
+
+        .upload-chip {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 9px 12px;
+            background: #f0fdf7;
+            border: 1px solid #cdeee0;
+            border-radius: 9px;
+            font-size: 12px;
+            margin-top: 8px;
+        }
+
+        .upload-chip .name {
+            color: #1f2937;
+            font-weight: 600;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .upload-chip .name a {
+            color: var(--green-700);
+            font-weight: 700;
+        }
+
+        .upload-chip .status {
+            flex-shrink: 0;
+            font-weight: 700;
+            color: var(--green-700);
+            font-size: 11px;
+        }
     </style>
 
     <div style="margin-bottom:14px;">
@@ -154,14 +260,15 @@
                         {{ $readonly ?? false ? 'disabled' : '' }}>{{ old('ringkasan_hasil', $laporan->ringkasan_hasil ?? '') }}</textarea>
                 </div>
 
-                <div class="field">
-                    <label>Upload Dokumen Laporan Hasil (PDF, maks. 2MB) <span class="tag-wajib-field">WAJIB
-                            DIISI</span></label>
+                {{-- ===================== Upload Dokumen Laporan Hasil (WAJIB) ===================== --}}
+                <div class="upload-field">
+                    <div class="upload-field-label">Dokumen Laporan Hasil <span class="tag-wajib-field">WAJIB
+                            DIISI</span></div>
 
                     @if ($laporan && $laporan->file_path)
-                        <div class="file-chip" style="margin-bottom:10px;">
-                            <span>📄 <a href="{{ asset('storage/' . $laporan->file_path) }}" target="_blank"
-                                    style="color:var(--green-700); font-weight:700;">{{ $laporan->file_nama_asli }}</a>
+                        <div class="upload-chip">
+                            <span class="name">📄 <a href="{{ asset('storage/' . $laporan->file_path) }}"
+                                    target="_blank">{{ $laporan->file_nama_asli }}</a>
                                 &middot; {{ number_format($laporan->file_size / 1024, 0) }} KB</span>
                             @php [$fl, $fc] = $laporan->statusLabel(); @endphp
                             <span class="badge {{ $fc }}">{{ $fl }}</span>
@@ -169,17 +276,128 @@
                     @endif
 
                     @unless ($readonly ?? false)
-                        <label for="fileInput" style="display:block;">
-                            <div class="dropzone">
-                                <div class="ic">☁️</div>
-                                <b>Upload File Laporan Hasil (PDF, maks. 2MB)</b>
-                                <span>Klik di sini untuk memilih file</span>
-                            </div>
+                        <label for="fileInput" class="upload-box" style="margin-top:8px;">
+                            <span class="ub-icon">📄</span>
+                            <span class="ub-text">
+                                <b>Upload File Laporan Hasil</b>
+                                <span>Klik untuk memilih file (PDF, maks. 2MB)</span>
+                            </span>
+                            <span class="ub-btn">Pilih File</span>
                         </label>
                         <input type="file" id="fileInput" name="file" accept="application/pdf" style="display:none;"
-                            {{ $laporan && $laporan->file_path ? '' : 'required' }} onchange="showFileName(this)">
-                        <div class="file-chip" id="fileChip" style="display:none;"></div>
+                            {{ $laporan && $laporan->file_path ? '' : 'required' }} onchange="showFileName(this, 'fileChip')">
+                        <div class="upload-chip" id="fileChip" style="display:none;"></div>
                     @endunless
+
+                    @if ($laporan && $laporan->file_path && !($readonly ?? false))
+                        <button type="button" class="btn btn-danger btn-sm" style="margin-top:6px;"
+                            onclick="hapusItem('{{ route('laporan.hasil.hapus-file', $pengajuan) }}', 'Hapus dokumen ini?')">Hapus
+                            Dokumen</button>
+                    @endif
+                </div>
+
+                {{-- ===================== Upload Kwitansi (WAJIB) ===================== --}}
+                <div class="upload-field">
+                    <div class="upload-field-label">Kwitansi <span class="tag-wajib-field">WAJIB DIISI</span></div>
+
+                    @if ($laporan && $laporan->kwitansi_path)
+                        <div class="upload-chip">
+                            <span class="name">📄 <a href="{{ asset('storage/' . $laporan->kwitansi_path) }}"
+                                    target="_blank">{{ $laporan->kwitansi_nama_asli }}</a>
+                                &middot; {{ number_format($laporan->kwitansi_size / 1024, 0) }} KB</span>
+                            <span class="status">Tersimpan</span>
+                        </div>
+                    @endif
+
+                    @unless ($readonly ?? false)
+                        <label for="kwitansiInput" class="upload-box" style="margin-top:8px;">
+                            <span class="ub-icon">📄</span>
+                            <span class="ub-text">
+                                <b>Upload File Kwitansi</b>
+                                <span>Klik untuk memilih file (PDF, maks. 2MB)</span>
+                            </span>
+                            <span class="ub-btn">Pilih File</span>
+                        </label>
+                        <input type="file" id="kwitansiInput" name="kwitansi" accept="application/pdf" style="display:none;"
+                            {{ $laporan && $laporan->kwitansi_path ? '' : 'required' }}
+                            onchange="showFileName(this, 'kwitansiChip')">
+                        <div class="upload-chip" id="kwitansiChip" style="display:none;"></div>
+                    @endunless
+
+                    @if ($laporan && $laporan->kwitansi_path && !($readonly ?? false))
+                        <button type="button" class="btn btn-danger btn-sm" style="margin-top:6px;"
+                            onclick="hapusItem('{{ route('laporan.hasil.hapus-kwitansi', $pengajuan) }}', 'Hapus dokumen kwitansi ini?')">Hapus
+                            Kwitansi</button>
+                    @endif
+                </div>
+
+                {{-- ===================== Upload Bukti Pajak (OPSIONAL) ===================== --}}
+                <div class="upload-field">
+                    <div class="upload-field-label">Bukti Pajak <span class="tag-opsional">OPSIONAL</span></div>
+
+                    @if ($laporan && $laporan->bukti_pajak_path)
+                        <div class="upload-chip">
+                            <span class="name">📄 <a href="{{ asset('storage/' . $laporan->bukti_pajak_path) }}"
+                                    target="_blank">{{ $laporan->bukti_pajak_nama_asli }}</a>
+                                &middot; {{ number_format($laporan->bukti_pajak_size / 1024, 0) }} KB</span>
+                            <span class="status">Tersimpan</span>
+                        </div>
+                    @endif
+
+                    @unless ($readonly ?? false)
+                        <label for="buktiPajakInput" class="upload-box" style="margin-top:8px;">
+                            <span class="ub-icon">📄</span>
+                            <span class="ub-text">
+                                <b>Upload File Bukti Pajak</b>
+                                <span>Klik untuk memilih file (PDF, maks. 2MB)</span>
+                            </span>
+                            <span class="ub-btn">Pilih File</span>
+                        </label>
+                        <input type="file" id="buktiPajakInput" name="bukti_pajak" accept="application/pdf"
+                            style="display:none;" onchange="showFileName(this, 'buktiPajakChip')">
+                        <div class="upload-chip" id="buktiPajakChip" style="display:none;"></div>
+                    @endunless
+
+                    @if ($laporan && $laporan->bukti_pajak_path && !($readonly ?? false))
+                        <button type="button" class="btn btn-danger btn-sm" style="margin-top:6px;"
+                            onclick="hapusItem('{{ route('laporan.hasil.hapus-bukti-pajak', $pengajuan) }}', 'Hapus dokumen bukti pajak ini?')">Hapus
+                            Bukti Pajak</button>
+                    @endif
+                </div>
+
+                {{-- ===================== Upload Berita Acara / Hibah (OPSIONAL) ===================== --}}
+                <div class="upload-field">
+                    <div class="upload-field-label">Berita Acara Hibah <span class="tag-opsional">OPSIONAL</span>
+                    </div>
+
+                    @if ($laporan && $laporan->berita_acara_path)
+                        <div class="upload-chip">
+                            <span class="name">📄 <a href="{{ asset('storage/' . $laporan->berita_acara_path) }}"
+                                    target="_blank">{{ $laporan->berita_acara_nama_asli }}</a>
+                                &middot; {{ number_format($laporan->berita_acara_size / 1024, 0) }} KB</span>
+                            <span class="status">Tersimpan</span>
+                        </div>
+                    @endif
+
+                    @unless ($readonly ?? false)
+                        <label for="beritaAcaraInput" class="upload-box" style="margin-top:8px;">
+                            <span class="ub-icon">📄</span>
+                            <span class="ub-text">
+                                <b>Upload File Berita Acara / Hibah</b>
+                                <span>Klik untuk memilih file (PDF, maks. 2MB)</span>
+                            </span>
+                            <span class="ub-btn">Pilih File</span>
+                        </label>
+                        <input type="file" id="beritaAcaraInput" name="berita_acara" accept="application/pdf"
+                            style="display:none;" onchange="showFileName(this, 'beritaAcaraChip')">
+                        <div class="upload-chip" id="beritaAcaraChip" style="display:none;"></div>
+                    @endunless
+
+                    @if ($laporan && $laporan->berita_acara_path && !($readonly ?? false))
+                        <button type="button" class="btn btn-danger btn-sm" style="margin-top:6px;"
+                            onclick="hapusItem('{{ route('laporan.hasil.hapus-berita-acara', $pengajuan) }}', 'Hapus dokumen berita acara/hibah ini?')">Hapus
+                            Berita Acara/Hibah</button>
+                    @endif
                 </div>
 
                 <div class="field">
@@ -198,14 +416,6 @@
                         required>
                 </div>
             </form>
-
-            @if ($laporan && $laporan->file_path && !($readonly ?? false))
-                <form method="POST" action="{{ route('laporan.hasil.hapus-file', $pengajuan) }}"
-                    onsubmit="return confirm('Hapus dokumen ini?')" style="margin-top:6px;">
-                    @csrf
-                    <button type="submit" class="btn btn-danger btn-sm">Hapus Dokumen</button>
-                </form>
-            @endif
         </div>
 
         <div class="card">
@@ -253,8 +463,8 @@
             <div class="field" style="margin-top:16px;">
                 <label>Dokumentasi Kegiatan <span class="tag-opsional">OPSIONAL</span></label>
                 @if (!empty($laporan->dokumentasi))
-                    <div class="file-chip" style="margin-bottom:8px;">
-                        <span>🖼️ {{ count($laporan->dokumentasi) }} file dipilih</span>
+                    <div class="upload-chip" style="margin-bottom:8px;">
+                        <span class="name">🖼️ {{ count($laporan->dokumentasi) }} file dipilih</span>
                     </div>
                 @endif
                 @unless ($readonly ?? false)
@@ -313,13 +523,29 @@
     </template>
 
     <script>
-        function showFileName(input) {
-            const chip = document.getElementById('fileChip');
+        const CSRF_TOKEN = '{{ csrf_token() }}';
+
+        // Dipakai untuk semua tombol "Hapus X" (dokumen, kwitansi, bukti pajak, berita acara)
+        // supaya TIDAK perlu bikin <form> baru di dalam <form id="formHasil"> — form bersarang
+        // itu invalid HTML dan bikin browser menutup paksa formHasil lebih awal, sehingga field
+        // sesudahnya (kwitansi dst) gagal ikut terkirim.
+        function hapusItem(url, confirmMsg) {
+            if (!confirm(confirmMsg || 'Yakin ingin menghapus file ini?')) return;
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = url;
+            form.innerHTML = '<input type="hidden" name="_token" value="' + CSRF_TOKEN + '">';
+            document.body.appendChild(form);
+            form.submit();
+        }
+
+        function showFileName(input, chipId) {
+            const chip = document.getElementById(chipId);
             if (input.files && input.files[0]) {
                 const f = input.files[0];
                 chip.style.display = 'flex';
                 chip.innerHTML =
-                    `<span>📄 ${f.name} &middot; ${Math.round(f.size/1024)} KB</span><span style="color:var(--green-700); font-weight:700;">Siap diunggah</span>`;
+                    `<span class="name">📄 ${f.name} &middot; ${Math.round(f.size/1024)} KB</span><span class="status">Siap diunggah</span>`;
             }
         }
 

@@ -214,24 +214,6 @@
                                 'nama' => $pengajuan->rab_nama_asli,
                                 'wajib' => true,
                             ],
-                            [
-                                'label' => 'Kwitansi',
-                                'path' => $pengajuan->kwitansi_path,
-                                'nama' => $pengajuan->kwitansi_nama_asli,
-                                'wajib' => true,
-                            ],
-                            [
-                                'label' => 'Bukti Pajak',
-                                'path' => $pengajuan->bukti_pajak_path,
-                                'nama' => $pengajuan->bukti_pajak_nama_asli,
-                                'wajib' => false,
-                            ],
-                            [
-                                'label' => 'Berita Acara / Hibah',
-                                'path' => $pengajuan->berita_acara_path,
-                                'nama' => $pengajuan->berita_acara_nama_asli,
-                                'wajib' => false,
-                            ],
                         ];
                     @endphp
 

@@ -149,10 +149,13 @@
             </div>
 
             <div class="pt-3 border-t border-emerald-900/80 space-y-1 text-emerald-100/90 font-medium">
+                <!-- MENU LAPORAN YANG DISATUKAN -->
                 <a href="{{ route('admin.laporan') }}"
-                    class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition {{ request()->routeIs('admin.laporan') ? 'bg-emerald-700 text-white font-bold shadow-lg shadow-emerald-950/40' : 'hover:bg-emerald-900/60 hover:text-white' }}">
+                    class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition {{ request()->routeIs('admin.laporan*') ? 'bg-emerald-700 text-white font-bold shadow-lg shadow-emerald-950/40' : 'hover:bg-emerald-900/60 hover:text-white' }}">
                     <i class="fa-solid fa-chart-pie w-4 text-center text-emerald-400"></i> Laporan
                 </a>
+                <!-- END MENU LAPORAN -->
+
                 <a href="{{ route('admin.activity_log') }}"
                     class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition {{ request()->routeIs('admin.activity_log') ? 'bg-emerald-700 text-white font-bold shadow-lg shadow-emerald-950/40' : 'hover:bg-emerald-900/60 hover:text-white' }}">
                     <i class="fa-solid fa-clock-rotate-left w-4 text-center text-emerald-400"></i> Activity Log
@@ -162,7 +165,7 @@
                     <i class="fa-solid fa-bell w-4 text-center text-amber-400"></i> Notifikasi
                 </a>
 
-                <!-- FORM LOGOUT YANG SUDAH DISESUAIKAN DENGAN RUTE ADMIN -->
+                <!-- FORM LOGOUT -->
                 <form action="{{ route('admin.logout') }}" method="POST" class="pt-2">
                     @csrf
                     <button type="submit"

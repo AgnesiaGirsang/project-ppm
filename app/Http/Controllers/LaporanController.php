@@ -271,8 +271,9 @@ class LaporanController extends Controller
 
     /**
      * Simpan Laporan Hasil. Ringkasan Hasil & Dokumentasi Kegiatan opsional.
-     * Dokumen laporan, Link Inovasi Produk, dan No. SK wajib diisi — tapi
-     * hanya divalidasi wajib saat action=kirim (draft boleh belum lengkap).
+     * Dokumen laporan & kwitansi wajib diisi; bukti pajak & berita acara opsional.
+     * Link Inovasi Produk dan No. SK wajib diisi — tapi hanya divalidasi wajib
+     * saat action=kirim (draft boleh belum lengkap).
      */
     public function store(Request $request, string $tipe, Pengajuan $pengajuan)
     {
@@ -298,6 +299,8 @@ class LaporanController extends Controller
             'luaran_lain.*.luaran_master_id' => 'nullable|exists:luaran_masters,id',
             'luaran_lain.*.link' => 'nullable|string|max:500',
             'file' => 'nullable|file|mimes:pdf|max:2048',
+            'bukti_pajak' => 'nullable|file|mimes:pdf|max:2048',
+            'berita_acara' => 'nullable|file|mimes:pdf|max:2048',
             'dokumentasi.*' => 'nullable|image|max:5120',
         ];
 
@@ -305,9 +308,13 @@ class LaporanController extends Controller
             $rules['file'] = ($existing && $existing->file_path)
                 ? 'nullable|file|mimes:pdf|max:2048'
                 : 'required|file|mimes:pdf|max:2048';
+            $rules['kwitansi'] = ($existing && $existing->kwitansi_path)
+                ? 'nullable|file|mimes:pdf|max:2048'
+                : 'required|file|mimes:pdf|max:2048';
             $rules['link_inovasi_produk'] = 'required|string|max:255';
             $rules['no_sk'] = 'required|string|max:255';
         } else {
+            $rules['kwitansi'] = 'nullable|file|mimes:pdf|max:2048';
             $rules['link_inovasi_produk'] = 'nullable|string|max:255';
             $rules['no_sk'] = 'nullable|string|max:255';
         }
@@ -355,6 +362,36 @@ class LaporanController extends Controller
             $laporan->file_path = $file->store('laporan-hasil', 'public');
             $laporan->file_nama_asli = $file->getClientOriginalName();
             $laporan->file_size = $file->getSize();
+        }
+
+        if ($request->hasFile('kwitansi')) {
+            if ($laporan->kwitansi_path) {
+                Storage::disk('public')->delete($laporan->kwitansi_path);
+            }
+            $file = $request->file('kwitansi');
+            $laporan->kwitansi_path = $file->store('laporan-hasil/kwitansi', 'public');
+            $laporan->kwitansi_nama_asli = $file->getClientOriginalName();
+            $laporan->kwitansi_size = $file->getSize();
+        }
+
+        if ($request->hasFile('bukti_pajak')) {
+            if ($laporan->bukti_pajak_path) {
+                Storage::disk('public')->delete($laporan->bukti_pajak_path);
+            }
+            $file = $request->file('bukti_pajak');
+            $laporan->bukti_pajak_path = $file->store('laporan-hasil/bukti-pajak', 'public');
+            $laporan->bukti_pajak_nama_asli = $file->getClientOriginalName();
+            $laporan->bukti_pajak_size = $file->getSize();
+        }
+
+        if ($request->hasFile('berita_acara')) {
+            if ($laporan->berita_acara_path) {
+                Storage::disk('public')->delete($laporan->berita_acara_path);
+            }
+            $file = $request->file('berita_acara');
+            $laporan->berita_acara_path = $file->store('laporan-hasil/berita-acara', 'public');
+            $laporan->berita_acara_nama_asli = $file->getClientOriginalName();
+            $laporan->berita_acara_size = $file->getSize();
         }
 
         if ($request->hasFile('dokumentasi')) {
@@ -421,6 +458,66 @@ class LaporanController extends Controller
         }
 
         return redirect()->route('laporan.form', ['hasil', $pengajuan])->with('success', 'Dokumen berhasil dihapus.');
+    }
+
+    public function hasilHapusKwitansi(Pengajuan $pengajuan)
+    {
+        $user = Auth::user();
+        abort_unless($pengajuan->pegawai_id === $user->id, 403);
+
+        $laporan = LaporanHasil::where('pengajuan_id', $pengajuan->id)->first();
+
+        abort_if($laporan && in_array($laporan->status, ['proses', 'disetujui']), 403, 'Laporan sudah dikirim dan tidak bisa diubah.');
+
+        if ($laporan && $laporan->kwitansi_path) {
+            Storage::disk('public')->delete($laporan->kwitansi_path);
+            $laporan->kwitansi_path = null;
+            $laporan->kwitansi_nama_asli = null;
+            $laporan->kwitansi_size = null;
+            $laporan->save();
+        }
+
+        return redirect()->route('laporan.form', ['hasil', $pengajuan])->with('success', 'Dokumen kwitansi berhasil dihapus.');
+    }
+
+    public function hasilHapusBuktiPajak(Pengajuan $pengajuan)
+    {
+        $user = Auth::user();
+        abort_unless($pengajuan->pegawai_id === $user->id, 403);
+
+        $laporan = LaporanHasil::where('pengajuan_id', $pengajuan->id)->first();
+
+        abort_if($laporan && in_array($laporan->status, ['proses', 'disetujui']), 403, 'Laporan sudah dikirim dan tidak bisa diubah.');
+
+        if ($laporan && $laporan->bukti_pajak_path) {
+            Storage::disk('public')->delete($laporan->bukti_pajak_path);
+            $laporan->bukti_pajak_path = null;
+            $laporan->bukti_pajak_nama_asli = null;
+            $laporan->bukti_pajak_size = null;
+            $laporan->save();
+        }
+
+        return redirect()->route('laporan.form', ['hasil', $pengajuan])->with('success', 'Dokumen bukti pajak berhasil dihapus.');
+    }
+
+    public function hasilHapusBeritaAcara(Pengajuan $pengajuan)
+    {
+        $user = Auth::user();
+        abort_unless($pengajuan->pegawai_id === $user->id, 403);
+
+        $laporan = LaporanHasil::where('pengajuan_id', $pengajuan->id)->first();
+
+        abort_if($laporan && in_array($laporan->status, ['proses', 'disetujui']), 403, 'Laporan sudah dikirim dan tidak bisa diubah.');
+
+        if ($laporan && $laporan->berita_acara_path) {
+            Storage::disk('public')->delete($laporan->berita_acara_path);
+            $laporan->berita_acara_path = null;
+            $laporan->berita_acara_nama_asli = null;
+            $laporan->berita_acara_size = null;
+            $laporan->save();
+        }
+
+        return redirect()->route('laporan.form', ['hasil', $pengajuan])->with('success', 'Dokumen berita acara/hibah berhasil dihapus.');
     }
 
     public function hasilHapusDokumentasi(Pengajuan $pengajuan, int $index)

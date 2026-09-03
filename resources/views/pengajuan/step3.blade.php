@@ -57,118 +57,111 @@
             vertical-align: middle;
         }
 
-        /* ===================== COMPACT UPLOAD CARD ===================== */
-        .upload-list {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            margin-bottom: 18px;
-        }
-
-        .upload-row {
+        /* ===== Upload box compact — horizontal, hemat ruang ===== */
+        .upload-box {
             display: flex;
             align-items: center;
             gap: 12px;
-            border: 1px solid #e5e7eb;
+            padding: 11px 14px;
+            border: 1.5px dashed #cbd5e1;
             border-radius: 10px;
-            padding: 10px 14px;
-            background: #fff;
+            background: #fafbfc;
+            cursor: pointer;
             transition: border-color .15s ease, background .15s ease;
         }
 
-        .upload-row:hover {
+        .upload-box:hover {
             border-color: #00875A;
-            background: #f8fdfb;
+            background: #f4faf7;
         }
 
-        .upload-row.is-filled {
-            border-color: #b7e4cf;
-            background: #f2fbf7;
-        }
-
-        .upload-row .u-icon {
-            flex: 0 0 auto;
-            width: 36px;
-            height: 36px;
+        .upload-box .ub-icon {
+            width: 34px;
+            height: 34px;
+            min-width: 34px;
             border-radius: 8px;
-            background: #eef2f7;
+            background: #e6f4ee;
+            color: #00875A;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 16px;
+            font-size: 15px;
         }
 
-        .upload-row.is-filled .u-icon {
-            background: #dcfce7;
-        }
-
-        .upload-row .u-info {
-            flex: 1 1 auto;
+        .upload-box .ub-text {
+            flex: 1;
             min-width: 0;
         }
 
-        .upload-row .u-title {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-weight: 700;
+        .upload-box .ub-text b {
+            display: block;
             font-size: 12.5px;
             color: #111827;
-            margin-bottom: 2px;
+            font-weight: 700;
         }
 
-        .upload-row .u-meta {
+        .upload-box .ub-text span {
+            display: block;
             font-size: 11px;
             color: #6b7280;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            margin-top: 1px;
         }
 
-        .upload-row .u-meta.u-meta-ok {
-            color: #00875A;
-            font-weight: 600;
-        }
-
-        .upload-row .u-status {
-            flex: 0 0 auto;
-            font-size: 10.5px;
-            font-weight: 700;
-            padding: 3px 9px;
-            border-radius: 999px;
-            background: #f3f4f6;
-            color: #6b7280;
-            white-space: nowrap;
-        }
-
-        .upload-row.is-filled .u-status {
-            background: #dcfce7;
-            color: #00875A;
-        }
-
-        .upload-row .u-btn {
-            flex: 0 0 auto;
-            border: 1px solid #d1d5db;
-            background: #fff;
-            color: #374151;
+        .upload-box .ub-btn {
+            flex-shrink: 0;
             font-size: 11.5px;
             font-weight: 700;
-            padding: 7px 12px;
-            border-radius: 8px;
-            cursor: pointer;
-            white-space: nowrap;
-            transition: background .15s ease, border-color .15s ease;
+            color: #00875A;
+            background: #e6f4ee;
+            padding: 6px 12px;
+            border-radius: 7px;
         }
 
-        .upload-row .u-btn:hover {
-            background: #f3f4f6;
-            border-color: #9ca3af;
+        .upload-field {
+            margin-bottom: 18px;
         }
 
-        .upload-hint {
+        .upload-field-label {
+            display: flex;
+            align-items: center;
+            font-size: 12.5px;
+            font-weight: 700;
+            color: #111827;
+            margin-bottom: 4px;
+        }
+
+        .upload-field-hint {
             font-size: 11px;
-            color: var(--ink-500, #6b7280);
-            margin: -6px 0 14px 2px;
+            color: var(--ink-500);
+            margin-bottom: 8px;
+        }
+
+        .upload-chip {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 9px 12px;
+            background: #f0fdf7;
+            border: 1px solid #cdeee0;
+            border-radius: 9px;
+            font-size: 12px;
+            margin-top: 8px;
+        }
+
+        .upload-chip .name {
+            color: #1f2937;
+            font-weight: 600;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .upload-chip .status {
+            flex-shrink: 0;
+            font-weight: 700;
+            color: var(--green-700);
+            font-size: 11px;
         }
     </style>
 
@@ -192,154 +185,92 @@
                 Dokumen & Anggaran
             </div>
 
-            <div class="upload-hint">Format PDF, ukuran maksimal 2 MB per dokumen. Klik baris di bawah untuk memilih
-                file.</div>
+            {{-- ===================== Dokumen Proposal (WAJIB) ===================== --}}
+            <div class="upload-field">
+                <div class="upload-field-label">Dokumen Proposal <span class="tag-wajib-field">WAJIB DIISI</span></div>
+                <div class="upload-field-hint">Format PDF, ukuran maksimal 2 MB.</div>
 
-            <div class="upload-list">
-                {{-- ===================== Dokumen Proposal (WAJIB) ===================== --}}
-                @php
-                    $proposalFilled = (bool) $w['proposal_path'];
-                @endphp
-                <label for="proposalInput" class="upload-row {{ $proposalFilled ? 'is-filled' : '' }}" id="rowProposal">
-                    <span class="u-icon">📄</span>
-                    <span class="u-info">
-                        <span class="u-title">Dokumen Proposal <span class="tag-wajib-field">WAJIB</span></span>
-                        <span class="u-meta {{ $proposalFilled ? 'u-meta-ok' : '' }}" id="metaProposal">
-                            @if ($proposalFilled)
-                                {{ $w['proposal_nama_asli'] }} &middot;
-                                {{ number_format($w['proposal_size'] / 1024, 0) }} KB
-                            @else
-                                Belum ada file dipilih
-                            @endif
-                        </span>
+                <label for="proposalInput" class="upload-box">
+                    <span class="ub-icon">📄</span>
+                    <span class="ub-text">
+                        <b>Upload File Proposal</b>
+                        <span>Klik untuk memilih file (PDF, maks. 2MB)</span>
                     </span>
-                    <span class="u-status" id="statusProposal">{{ $proposalFilled ? 'Tersimpan' : 'Kosong' }}</span>
-                    <span class="u-btn">Pilih File</span>
+                    <span class="ub-btn">Pilih File</span>
                 </label>
                 <input type="file" id="proposalInput" name="proposal" accept="application/pdf" style="display:none;"
-                    onchange="handleFile(this, 'rowProposal', 'metaProposal', 'statusProposal')">
+                    onchange="showFileName(this, 'chipProposal')">
+
+                @if ($w['proposal_path'])
+                    <div class="upload-chip" id="chipProposal">
+                        <span class="name">📄 {{ $w['proposal_nama_asli'] }} &middot;
+                            {{ number_format($w['proposal_size'] / 1024, 0) }} KB</span>
+                        <span class="status">Tersimpan</span>
+                    </div>
+                @else
+                    <div class="upload-chip" id="chipProposal" style="display:none;"></div>
+                @endif
 
                 {{-- ===================== Dokumen Kontrak (WAJIB) ===================== --}}
-                @php
-                    $kontrakFilled = (bool) $w['kontrak_path'];
-                @endphp
-                <label for="kontrakInput" class="upload-row {{ $kontrakFilled ? 'is-filled' : '' }}" id="rowKontrak">
-                    <span class="u-icon">📄</span>
-                    <span class="u-info">
-                        <span class="u-title">Dokumen Kontrak <span class="tag-wajib-field">WAJIB</span></span>
-                        <span class="u-meta {{ $kontrakFilled ? 'u-meta-ok' : '' }}" id="metaKontrak">
-                            @if ($kontrakFilled)
-                                {{ $w['kontrak_nama_asli'] }} &middot;
-                                {{ number_format($w['kontrak_size'] / 1024, 0) }} KB
-                            @else
-                                Belum ada file dipilih
-                            @endif
+                <div class="upload-field">
+                    <div class="upload-field-label">Dokumen Kontrak <span class="tag-wajib-field">WAJIB DIISI</span></div>
+                    <div class="upload-field-hint">Format PDF, ukuran maksimal 2 MB.</div>
+
+                    <label for="kontrakInput" class="upload-box">
+                        <span class="ub-icon">📄</span>
+                        <span class="ub-text">
+                            <b>Upload File Kontrak</b>
+                            <span>Klik untuk memilih file (PDF, maks. 2MB)</span>
                         </span>
-                    </span>
-                    <span class="u-status" id="statusKontrak">{{ $kontrakFilled ? 'Tersimpan' : 'Kosong' }}</span>
-                    <span class="u-btn">Pilih File</span>
-                </label>
-                <input type="file" id="kontrakInput" name="kontrak" accept="application/pdf" style="display:none;"
-                    onchange="handleFile(this, 'rowKontrak', 'metaKontrak', 'statusKontrak')">
+                        <span class="ub-btn">Pilih File</span>
+                    </label>
+                    <input type="file" id="kontrakInput" name="kontrak" accept="application/pdf" style="display:none;"
+                        onchange="showFileName(this, 'chipKontrak')">
+
+                    @if ($w['kontrak_path'])
+                        <div class="upload-chip" id="chipKontrak">
+                            <span class="name">📄 {{ $w['kontrak_nama_asli'] }} &middot;
+                                {{ number_format($w['kontrak_size'] / 1024, 0) }} KB</span>
+                            <span class="status">Tersimpan</span>
+                        </div>
+                    @else
+                        <div class="upload-chip" id="chipKontrak" style="display:none;"></div>
+                    @endif
+                </div>
 
                 {{-- ===================== Dokumen RAB (WAJIB) ===================== --}}
-                @php
-                    $rabFilled = (bool) $w['rab_path'];
-                @endphp
-                <label for="rabInput" class="upload-row {{ $rabFilled ? 'is-filled' : '' }}" id="rowRab">
-                    <span class="u-icon">📄</span>
-                    <span class="u-info">
-                        <span class="u-title">Dokumen RAB <span class="tag-wajib-field">WAJIB</span></span>
-                        <span class="u-meta {{ $rabFilled ? 'u-meta-ok' : '' }}" id="metaRab">
-                            @if ($rabFilled)
-                                {{ $w['rab_nama_asli'] }} &middot; {{ number_format($w['rab_size'] / 1024, 0) }} KB
-                            @else
-                                Belum ada file dipilih
-                            @endif
-                        </span>
-                    </span>
-                    <span class="u-status" id="statusRab">{{ $rabFilled ? 'Tersimpan' : 'Kosong' }}</span>
-                    <span class="u-btn">Pilih File</span>
-                </label>
-                <input type="file" id="rabInput" name="rab" accept="application/pdf" style="display:none;"
-                    onchange="handleFile(this, 'rowRab', 'metaRab', 'statusRab')">
+                <div class="upload-field">
+                    <div class="upload-field-label">Dokumen RAB (Rencana Anggaran Biaya) <span class="tag-wajib-field">WAJIB
+                            DIISI</span></div>
+                    <div class="upload-field-hint">Format PDF, ukuran maksimal 2 MB.</div>
 
-                {{-- ===================== Dokumen Kwitansi (WAJIB) ===================== --}}
-                @php
-                    $kwitansiFilled = (bool) $w['kwitansi_path'];
-                @endphp
-                <label for="kwitansiInput" class="upload-row {{ $kwitansiFilled ? 'is-filled' : '' }}" id="rowKwitansi">
-                    <span class="u-icon">📄</span>
-                    <span class="u-info">
-                        <span class="u-title">Dokumen Kwitansi <span class="tag-wajib-field">WAJIB</span></span>
-                        <span class="u-meta {{ $kwitansiFilled ? 'u-meta-ok' : '' }}" id="metaKwitansi">
-                            @if ($kwitansiFilled)
-                                {{ $w['kwitansi_nama_asli'] }} &middot;
-                                {{ number_format($w['kwitansi_size'] / 1024, 0) }} KB
-                            @else
-                                Belum ada file dipilih
-                            @endif
+                    <label for="rabInput" class="upload-box">
+                        <span class="ub-icon">📄</span>
+                        <span class="ub-text">
+                            <b>Upload File RAB</b>
+                            <span>Klik untuk memilih file (PDF, maks. 2MB)</span>
                         </span>
-                    </span>
-                    <span class="u-status" id="statusKwitansi">{{ $kwitansiFilled ? 'Tersimpan' : 'Kosong' }}</span>
-                    <span class="u-btn">Pilih File</span>
-                </label>
-                <input type="file" id="kwitansiInput" name="kwitansi" accept="application/pdf" style="display:none;"
-                    onchange="handleFile(this, 'rowKwitansi', 'metaKwitansi', 'statusKwitansi')">
+                        <span class="ub-btn">Pilih File</span>
+                    </label>
+                    <input type="file" id="rabInput" name="rab" accept="application/pdf" style="display:none;"
+                        onchange="showFileName(this, 'chipRab')">
 
-                {{-- ===================== Bukti Pajak (OPSIONAL) ===================== --}}
-                @php
-                    $pajakFilled = (bool) $w['bukti_pajak_path'];
-                @endphp
-                <label for="buktiPajakInput" class="upload-row {{ $pajakFilled ? 'is-filled' : '' }}" id="rowBuktiPajak">
-                    <span class="u-icon">📄</span>
-                    <span class="u-info">
-                        <span class="u-title">Bukti Pajak <span class="tag-opsional">OPSIONAL</span></span>
-                        <span class="u-meta {{ $pajakFilled ? 'u-meta-ok' : '' }}" id="metaBuktiPajak">
-                            @if ($pajakFilled)
-                                {{ $w['bukti_pajak_nama_asli'] }} &middot;
-                                {{ number_format($w['bukti_pajak_size'] / 1024, 0) }} KB
-                            @else
-                                Belum ada file dipilih (jika ada)
-                            @endif
-                        </span>
-                    </span>
-                    <span class="u-status" id="statusBuktiPajak">{{ $pajakFilled ? 'Tersimpan' : 'Kosong' }}</span>
-                    <span class="u-btn">Pilih File</span>
-                </label>
-                <input type="file" id="buktiPajakInput" name="bukti_pajak" accept="application/pdf"
-                    style="display:none;"
-                    onchange="handleFile(this, 'rowBuktiPajak', 'metaBuktiPajak', 'statusBuktiPajak')">
+                    @if ($w['rab_path'])
+                        <div class="upload-chip" id="chipRab">
+                            <span class="name">📄 {{ $w['rab_nama_asli'] }} &middot;
+                                {{ number_format($w['rab_size'] / 1024, 0) }} KB</span>
+                            <span class="status">Tersimpan</span>
+                        </div>
+                    @else
+                        <div class="upload-chip" id="chipRab" style="display:none;"></div>
+                    @endif
+                    <div class="alert-box alert-amber" style="margin-top:10px;">⚠️ Jika proposal diminta revisi oleh admin,
+                        dokumen lama <b>tidak akan dihapus</b> dan tetap tersimpan. Anda cukup mengunggah dokumen proposal
+                        versi
+                        terbaru sebagai tambahan.</div>
+                </div>
 
-                {{-- ===================== Berita Acara / Hibah (OPSIONAL) ===================== --}}
-                @php
-                    $beritaFilled = (bool) $w['berita_acara_path'];
-                @endphp
-                <label for="beritaAcaraInput" class="upload-row {{ $beritaFilled ? 'is-filled' : '' }}"
-                    id="rowBeritaAcara">
-                    <span class="u-icon">📄</span>
-                    <span class="u-info">
-                        <span class="u-title">Berita Acara / Hibah <span class="tag-opsional">OPSIONAL</span></span>
-                        <span class="u-meta {{ $beritaFilled ? 'u-meta-ok' : '' }}" id="metaBeritaAcara">
-                            @if ($beritaFilled)
-                                {{ $w['berita_acara_nama_asli'] }} &middot;
-                                {{ number_format($w['berita_acara_size'] / 1024, 0) }} KB
-                            @else
-                                Belum ada file dipilih (jika ada)
-                            @endif
-                        </span>
-                    </span>
-                    <span class="u-status" id="statusBeritaAcara">{{ $beritaFilled ? 'Tersimpan' : 'Kosong' }}</span>
-                    <span class="u-btn">Pilih File</span>
-                </label>
-                <input type="file" id="beritaAcaraInput" name="berita_acara" accept="application/pdf"
-                    style="display:none;"
-                    onchange="handleFile(this, 'rowBeritaAcara', 'metaBeritaAcara', 'statusBeritaAcara')">
             </div>
-
-            <div class="alert-box alert-amber" style="margin-bottom:18px;">⚠️ Jika proposal diminta revisi oleh admin,
-                dokumen lama <b>tidak akan dihapus</b> dan tetap tersimpan. Anda cukup mengunggah dokumen proposal versi
-                terbaru sebagai tambahan.</div>
 
             <div class="field">
                 <label>Total Biaya Usulan (Rp)</label>
@@ -356,17 +287,13 @@
     </div>
 
     <script>
-        function handleFile(input, rowId, metaId, statusId) {
-            const row = document.getElementById(rowId);
-            const meta = document.getElementById(metaId);
-            const status = document.getElementById(statusId);
-
+        function showFileName(input, chipId) {
+            const chip = document.getElementById(chipId);
             if (input.files && input.files[0]) {
                 const f = input.files[0];
-                row.classList.add('is-filled');
-                meta.classList.add('u-meta-ok');
-                meta.textContent = `${f.name} · ${Math.round(f.size / 1024)} KB`;
-                status.textContent = 'Siap diunggah';
+                chip.style.display = 'flex';
+                chip.innerHTML =
+                    `<span class="name">📄 ${f.name} &middot; ${Math.round(f.size/1024)} KB</span><span class="status">Siap diunggah</span>`;
             }
         }
 

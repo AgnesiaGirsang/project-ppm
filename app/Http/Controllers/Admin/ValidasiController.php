@@ -48,7 +48,11 @@ class ValidasiController extends Controller
     {
         $request->validate([
             'keputusan' => 'required|in:setuju,revisi',
-            'catatan' => 'nullable|string'
+            // catatan WAJIB diisi kalau keputusannya "revisi" — jangan cuma diandalkan dari JS,
+            // karena JS bisa gagal/di-bypass, ini jaring pengaman terakhir di server.
+            'catatan' => 'nullable|string|required_if:keputusan,revisi',
+        ], [
+            'catatan.required_if' => 'Catatan revisi wajib diisi saat memilih keputusan "Perlu Revisi".',
         ]);
 
         $pengajuan = Pengajuan::findOrFail($id);
@@ -127,7 +131,9 @@ class ValidasiController extends Controller
     {
         $request->validate([
             'keputusan' => 'required|in:setuju,revisi',
-            'catatan' => 'nullable|string'
+            'catatan' => 'nullable|string|required_if:keputusan,revisi',
+        ], [
+            'catatan.required_if' => 'Catatan revisi wajib diisi saat memilih keputusan "Perlu Revisi".',
         ]);
 
         $laporan = LaporanKemajuan::findOrFail($id);
@@ -204,7 +210,9 @@ class ValidasiController extends Controller
     {
         $request->validate([
             'keputusan' => 'required|in:setuju,revisi',
-            'catatan' => 'nullable|string'
+            'catatan' => 'nullable|string|required_if:keputusan,revisi',
+        ], [
+            'catatan.required_if' => 'Catatan revisi wajib diisi saat memilih keputusan "Perlu Revisi".',
         ]);
 
         $laporan = LaporanHasil::findOrFail($id);

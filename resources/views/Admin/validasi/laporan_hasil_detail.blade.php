@@ -248,6 +248,79 @@
                 @endif
             </div>
 
+            <!-- Dokumen Pendukung (Kwitansi, Bukti Pajak, Berita Acara/Hibah) -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-6 space-y-3 text-xs">
+                <h3
+                    class="font-extrabold text-slate-900 text-sm uppercase tracking-wide border-b border-slate-100 pb-3 flex items-center gap-2">
+                    <i class="fa-solid fa-folder-open text-emerald-600"></i> Dokumen Pendukung
+                </h3>
+
+                <div class="space-y-3">
+                    @php
+                        $dokumenPendukung = [
+                            [
+                                'label' => 'Kwitansi',
+                                'path' => $selected->kwitansi_path,
+                                'nama' => $selected->kwitansi_nama_asli,
+                                'size' => $selected->kwitansi_size,
+                                'wajib' => true,
+                            ],
+                            [
+                                'label' => 'Bukti Pajak',
+                                'path' => $selected->bukti_pajak_path,
+                                'nama' => $selected->bukti_pajak_nama_asli,
+                                'size' => $selected->bukti_pajak_size,
+                                'wajib' => false,
+                            ],
+                            [
+                                'label' => 'Berita Acara / Hibah',
+                                'path' => $selected->berita_acara_path,
+                                'nama' => $selected->berita_acara_nama_asli,
+                                'size' => $selected->berita_acara_size,
+                                'wajib' => false,
+                            ],
+                        ];
+                    @endphp
+
+                    @foreach ($dokumenPendukung as $dok)
+                        <div
+                            class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-3.5 rounded-xl border border-slate-200/60 bg-slate-50/50">
+                            <div class="flex items-center gap-3 overflow-hidden">
+                                <div
+                                    class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 {{ $dok['path'] ? 'bg-red-50 text-red-600 border border-red-100' : 'bg-slate-100 text-slate-400' }}">
+                                    <i class="fa-solid fa-file-pdf"></i>
+                                </div>
+                                <div class="truncate">
+                                    <p class="font-bold text-slate-700 text-xs truncate flex items-center gap-2">
+                                        {{ $dok['label'] }}
+                                        <span
+                                            class="text-[9px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider {{ $dok['wajib'] ? 'bg-rose-50 text-rose-600' : 'bg-sky-50 text-sky-600' }}">
+                                            {{ $dok['wajib'] ? 'Wajib' : 'Opsional' }}
+                                        </span>
+                                    </p>
+                                    <p class="text-[11px] text-slate-400 truncate">
+                                        {{ $dok['path'] ? $dok['nama'] . ($dok['size'] ? ' • ' . number_format($dok['size'] / 1024, 1) . ' KB' : '') : 'Belum diunggah' }}
+                                    </p>
+                                </div>
+                            </div>
+
+                            @if ($dok['path'])
+                                <div class="flex items-center gap-2 w-full sm:w-auto justify-end shrink-0">
+                                    <a href="{{ route('berkas.show', ['path' => $dok['path']]) }}" target="_blank"
+                                        class="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 font-bold text-xs transition shadow-2xs">
+                                        <i class="fa-solid fa-eye text-slate-500 text-[11px]"></i> Pratinjau
+                                    </a>
+                                    <a href="{{ route('berkas.show', ['path' => $dok['path'], 'download' => 1]) }}"
+                                        class="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs transition shadow-2xs">
+                                        <i class="fa-solid fa-download text-[11px]"></i> Unduh
+                                    </a>
+                                </div>
+                            @endif
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+
             <!-- Link Inovasi Produk -->
             <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-6 space-y-3 text-xs">
                 <h3 class="font-extrabold text-slate-900 text-sm uppercase tracking-wide border-b border-slate-100 pb-3">
@@ -284,7 +357,7 @@
         <div class="lg:col-span-5 space-y-5 sticky top-5">
 
             <form action="{{ route('admin.validasi.laporan_hasil.update', $selected->id) }}" method="POST"
-                class="space-y-5">
+                id="formValidasiHasil" class="space-y-5">
                 @csrf
 
                 <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-6 space-y-4 text-xs">
@@ -297,7 +370,7 @@
                         <!-- Opsi Setujui -->
                         <label
                             class="flex items-start gap-3 p-3.5 rounded-xl border border-emerald-500 bg-emerald-50/20 cursor-pointer transition">
-                            <input type="radio" name="keputusan" value="setuju"
+                            <input type="radio" name="keputusan" value="setuju" id="keputusanSetuju"
                                 class="mt-0.5 w-4 h-4 text-emerald-700 border-slate-300 focus:ring-emerald-600 accent-emerald-700"
                                 {{ $selected->status == 'disetujui' ? 'checked' : '' }} required>
                             <div>
@@ -310,7 +383,7 @@
                         <!-- Opsi Revisi -->
                         <label
                             class="flex items-start gap-3 p-3.5 rounded-xl border border-slate-200 bg-white hover:border-slate-300 cursor-pointer transition">
-                            <input type="radio" name="keputusan" value="revisi"
+                            <input type="radio" name="keputusan" value="revisi" id="keputusanRevisi"
                                 class="mt-0.5 w-4 h-4 text-emerald-700 border-slate-300 focus:ring-emerald-600 accent-emerald-700"
                                 {{ $selected->status == 'revisi' ? 'checked' : '' }} required>
                             <div>
@@ -324,7 +397,8 @@
                     <div class="space-y-1.5 pt-2">
                         <label class="block font-bold text-slate-700 text-xs">Catatan / Catatan Revisi <span
                                 class="text-rose-500 font-normal">(Jika revisi wajib diisi)</span></label>
-                        <textarea name="catatan" rows="3" placeholder="Tuliskan catatan atau instruksi perbaikan..."
+                        <textarea name="catatan" id="catatanValidasi" rows="3"
+                            placeholder="Tuliskan catatan atau instruksi perbaikan..."
                             class="w-full border border-slate-200 rounded-xl p-3 text-xs focus:outline-none focus:border-emerald-700 bg-slate-50/50 resize-none transition">{{ $selected->catatan_validator ?? '' }}</textarea>
                     </div>
 
@@ -370,4 +444,37 @@
             @endif
         </div>
     </div>
+
+    <script>
+        (function() {
+            const form = document.getElementById('formValidasiHasil');
+            const radioSetuju = document.getElementById('keputusanSetuju');
+            const radioRevisi = document.getElementById('keputusanRevisi');
+            const catatan = document.getElementById('catatanValidasi');
+
+            if (!form || !radioSetuju || !radioRevisi || !catatan) {
+                return; // elemen tidak ditemukan, hentikan tanpa error
+            }
+
+            // Textarea "catatan" hanya wajib diisi (required) kalau pilihan
+            // "Perlu Revisi" yang dicentang. Karena novalidate TIDAK dipakai
+            // di form ini, browser otomatis menampilkan tooltip native
+            // "Please fill out this field" saat tombol submit diklik
+            // dan textarea ini required tapi kosong.
+            function syncRequired() {
+                if (radioRevisi.checked) {
+                    catatan.setAttribute('required', 'required');
+                } else {
+                    catatan.removeAttribute('required');
+                }
+            }
+
+            radioSetuju.addEventListener('change', syncRequired);
+            radioRevisi.addEventListener('change', syncRequired);
+
+            // Jalankan sekali saat halaman dimuat, kalau-kalau statusnya
+            // sudah "revisi" dari sebelumnya (mis. setelah reload halaman).
+            syncRequired();
+        })();
+    </script>
 @endsection

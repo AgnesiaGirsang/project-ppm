@@ -132,14 +132,6 @@
                     ({{ number_format($w['kontrak_size'] / 1024, 0) }} KB)</span></div>
             <div class="s5-row"><span class="k">RAB</span><span class="v">{{ $w['rab_nama_asli'] }}
                     ({{ number_format($w['rab_size'] / 1024, 0) }} KB)</span></div>
-            <div class="s5-row"><span class="k">Kwitansi</span><span class="v">{{ $w['kwitansi_nama_asli'] }}
-                    ({{ number_format($w['kwitansi_size'] / 1024, 0) }} KB)</span></div>
-            <div class="s5-row"><span class="k">Bukti Pajak</span><span
-                    class="v">{{ $w['bukti_pajak_nama_asli'] ? $w['bukti_pajak_nama_asli'] . ' (' . number_format($w['bukti_pajak_size'] / 1024, 0) . ' KB)' : 'Tidak diunggah' }}</span>
-            </div>
-            <div class="s5-row"><span class="k">Berita Acara / Hibah</span><span
-                    class="v">{{ $w['berita_acara_nama_asli'] ? $w['berita_acara_nama_asli'] . ' (' . number_format($w['berita_acara_size'] / 1024, 0) . ' KB)' : 'Tidak diunggah' }}</span>
-            </div>
             <div class="s5-row"><span class="k">Total Biaya Usulan</span><span class="v">Rp
                     {{ number_format($w['total_biaya'], 0, ',', '.') }}</span></div>
         </div>

@@ -17,7 +17,6 @@ use App\Http\Controllers\ProfilController;
 use App\Http\Controllers\RiwayatController;
 use Illuminate\Support\Facades\Route;
 
-
 /*
 |--------------------------------------------------------------------------
 | Public / Redirect Routes
@@ -27,7 +26,6 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return redirect()->route('login');
 });
-
 
 /*
 |--------------------------------------------------------------------------
@@ -272,6 +270,15 @@ Route::middleware(['auth', 'role:dosen'])->group(function () {
     Route::post('/laporan/hasil/{pengajuan}/hapus-file', [LaporanController::class, 'hasilHapusFile'])
         ->name('laporan.hasil.hapus-file');
 
+    Route::post('/laporan/hasil/{pengajuan}/hapus-kwitansi', [LaporanController::class, 'hasilHapusKwitansi'])
+        ->name('laporan.hasil.hapus-kwitansi');
+
+    Route::post('/laporan/hasil/{pengajuan}/hapus-bukti-pajak', [LaporanController::class, 'hasilHapusBuktiPajak'])
+        ->name('laporan.hasil.hapus-bukti-pajak');
+
+    Route::post('/laporan/hasil/{pengajuan}/hapus-berita-acara', [LaporanController::class, 'hasilHapusBeritaAcara'])
+        ->name('laporan.hasil.hapus-berita-acara');
+
     Route::post('/laporan/hasil/{pengajuan}/hapus-dokumentasi/{index}', [LaporanController::class, 'hasilHapusDokumentasi'])
         ->name('laporan.hasil.hapus-dokumentasi');
 
@@ -353,7 +360,7 @@ Route::middleware(['auth', 'role:admin'])
     |--------------------------------------------------------------------------
     */
 
-    // Diperbaiki: panggil method penelitian()/pengabdian() (auto-filter jenis),
+    // Panggil method penelitian()/pengabdian() (auto-filter jenis),
     // bukan semua() untuk keduanya.
     Route::get('/penelitian', [AdminPengajuanController::class, 'penelitian'])
         ->name('penelitian');
@@ -634,9 +641,20 @@ Route::middleware(['auth', 'role:admin'])
     |--------------------------------------------------------------------------
     */
 
-    Route::get('/laporan', function () {
-        return view('admin.laporan');
-    })->name('laporan');
+    Route::get('/laporan', [\App\Http\Controllers\Admin\LaporanAdminController::class, 'index'])
+        ->name('laporan');
+
+    Route::get('/laporan/export-laporan1-excel', [\App\Http\Controllers\Admin\LaporanAdminController::class, 'laporan1ExportExcel'])
+        ->name('laporan.laporan1.export.excel');
+
+    Route::get('/laporan/export-laporan1-pdf', [\App\Http\Controllers\Admin\LaporanAdminController::class, 'laporan1ExportPdf'])
+        ->name('laporan.laporan1.export.pdf');
+
+    Route::get('/laporan/export-laporan2-excel', [\App\Http\Controllers\Admin\LaporanAdminController::class, 'laporan2ExportExcel'])
+        ->name('laporan.laporan2.export.excel');
+
+    Route::get('/laporan/export-laporan2-pdf', [\App\Http\Controllers\Admin\LaporanAdminController::class, 'laporan2ExportPdf'])
+        ->name('laporan.laporan2.export.pdf');
 
 
     /*

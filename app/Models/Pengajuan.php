@@ -8,18 +8,15 @@ class Pengajuan extends Model
 {
     protected $table = 'pengajuan';
 
-    protected $fillable = [
-        'kode', 'pegawai_id', 'jenis', 'jalur', 'skema_id', 'rumpun_ilmu_id',
-        'judul', 'tahun_anggaran', 'tahun_pengajuan', 'tahun_pelaksanaan', 'tahun_capaian',
-        'proposal_path', 'proposal_nama_asli', 'proposal_size',
-        'kontrak_path', 'kontrak_nama_asli', 'kontrak_size',
-        'rab_path', 'rab_nama_asli', 'rab_size',
-        'kwitansi_path', 'kwitansi_nama_asli', 'kwitansi_size',
-        'bukti_pajak_path', 'bukti_pajak_nama_asli', 'bukti_pajak_size',
-        'berita_acara_path', 'berita_acara_nama_asli', 'berita_acara_size',
-        'total_biaya', 'inovasi_produk', 'tahap', 'status', 'catatan_validator',
-        'divalidasi_oleh', 'divalidasi_pada',
-    ];
+protected $fillable = [
+    'kode', 'pegawai_id', 'jenis', 'jalur', 'skema_id', 'rumpun_ilmu_id',
+    'judul', 'tahun_anggaran', 'tahun_pengajuan', 'tahun_pelaksanaan', 'tahun_capaian',
+    'proposal_path', 'proposal_nama_asli', 'proposal_size',
+    'kontrak_path', 'kontrak_nama_asli', 'kontrak_size',
+    'rab_path', 'rab_nama_asli', 'rab_size',
+    'total_biaya', 'inovasi_produk', 'tahap', 'status', 'catatan_validator',
+    'divalidasi_oleh', 'divalidasi_pada',
+];
 
     protected function casts(): array
     {

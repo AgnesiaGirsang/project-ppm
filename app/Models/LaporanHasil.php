@@ -10,9 +10,11 @@ class LaporanHasil extends Model
 
     protected $fillable = [
         'pengajuan_id', 'ringkasan_hasil', 'file_path', 'file_nama_asli', 'file_size',
+        'kwitansi_path', 'kwitansi_nama_asli', 'kwitansi_size',
+        'bukti_pajak_path', 'bukti_pajak_nama_asli', 'bukti_pajak_size',
+        'berita_acara_path', 'berita_acara_nama_asli', 'berita_acara_size',
         'link_inovasi_produk', 'no_sk', 'luaran_tercapai', 'luaran_tambahan_lain', 'dokumentasi',
-        'persentase', 'status', 'catatan_validator',
-        'divalidasi_oleh', 'divalidasi_pada',
+        'persentase', 'status', 'catatan_validator', 'divalidasi_oleh', 'divalidasi_pada',
     ];
 
     protected $casts = [
@@ -27,10 +29,9 @@ class LaporanHasil extends Model
         return $this->belongsTo(Pengajuan::class);
     }
 
-    // Admin yang melakukan validasi terakhir (gate dari akun yang login saat Kirim Keputusan)
     public function validator()
     {
-        return $this->belongsTo(\App\Models\Pegawai::class, 'divalidasi_oleh');
+        return $this->belongsTo(Pegawai::class, 'divalidasi_oleh');
     }
 
     public function statusLabel(): array

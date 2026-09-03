@@ -109,8 +109,7 @@
                     @endforeach
 
                     <div style="display:flex; gap:10px; margin-top:14px;">
-                        <button type="submit" class="btn btn-outline"
-                            onclick="document.getElementById('actionInput').value='draft'">Simpan Draft</button>
+                           
                         <button type="submit" class="btn btn-primary"
                             onclick="document.getElementById('actionInput').value='kirim'">Kirim Laporan</button>
                     </div>
