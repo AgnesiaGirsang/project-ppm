@@ -274,6 +274,18 @@ class LaporanController extends Controller
      * Dokumen laporan & kwitansi wajib diisi; bukti pajak & berita acara opsional.
      * Link Inovasi Produk dan No. SK wajib diisi — tapi hanya divalidasi wajib
      * saat action=kirim (draft boleh belum lengkap).
+     *
+     * Semua luaran yang sudah dipilih saat pengajuan proposal (wajib & tambahan)
+     * dianggap tercapai secara default begitu laporan hasil dikirim — checkbox
+     * status luaran selalu tercentang di tampilan dan tidak bisa diubah dosen.
+     * Namun link bukti untuk setiap luaran itu tetap WAJIB diisi sebelum laporan
+     * bisa dikirim (divalidasi manual di bawah karena field-nya dinamis per luaran).
+     *
+     * Untuk "Luaran Lainnya", dosen bisa pilih judul dari $luaranMasterLain ATAU
+     * pilih opsi "lainnya" di dropdown lalu ketik judul manual sendiri (nama_custom).
+     * Baris dengan luaran_master_id = "lainnya" TIDAK divalidasi lewat rule
+     * exists:luaran_masters,id (karena bukan ID asli), melainkan lewat rule
+     * required_if di bawah yang mewajibkan nama_custom diisi.
      */
     public function store(Request $request, string $tipe, Pengajuan $pengajuan)
     {
@@ -296,7 +308,18 @@ class LaporanController extends Controller
             'luaran' => 'nullable|array',
             'luaran.*.link' => 'nullable|string|max:500',
             'luaran_lain' => 'nullable|array',
-            'luaran_lain.*.luaran_master_id' => 'nullable|exists:luaran_masters,id',
+            // "lainnya" adalah kode khusus untuk input manual, jadi TIDAK boleh
+            // divalidasi exists:luaran_masters,id (bukan ID asli tabel itu).
+            'luaran_lain.*.luaran_master_id' => ['nullable', 'string', function ($attribute, $value, $fail) {
+                if (empty($value) || $value === 'lainnya') {
+                    return;
+                }
+                if (!LuaranMaster::where('id', $value)->exists()) {
+                    $fail('Luaran yang dipilih tidak valid.');
+                }
+            }],
+            // nama_custom wajib diisi HANYA kalau luaran_master_id di baris yang sama = "lainnya".
+            'luaran_lain.*.nama_custom' => 'nullable|required_if:luaran_lain.*.luaran_master_id,lainnya|string|max:255',
             'luaran_lain.*.link' => 'nullable|string|max:500',
             'file' => 'nullable|file|mimes:pdf|max:2048',
             'bukti_pajak' => 'nullable|file|mimes:pdf|max:2048',
@@ -319,32 +342,72 @@ class LaporanController extends Controller
             $rules['no_sk'] = 'nullable|string|max:255';
         }
 
-        $data = $request->validate($rules);
+        $data = $request->validate($rules, [
+            'luaran_lain.*.nama_custom.required_if' => 'Judul luaran manual wajib diisi untuk baris "Lainnya".',
+        ]);
 
-        $luaranTercapai = [];
-        foreach ($request->input('luaran', []) as $luaranId => $val) {
-            $link = trim($val['link'] ?? '');
-            if ($link !== '') {
-                $luaranTercapai[$luaranId] = ['link' => $link];
+        // Wajib isi link bukti untuk SEMUA luaran yang sudah dipilih saat proposal
+        // (wajib maupun tambahan) sebelum laporan bisa dikirim — divalidasi manual
+        // karena nama field-nya dinamis per ID luaran (luaran[123][link], dst).
+        if ($isKirim) {
+            $pengajuan->loadMissing('luaran.luaranMaster');
+            foreach ($pengajuan->luaran as $pl) {
+                $link = trim($request->input("luaran.{$pl->id}.link", ''));
+                if ($link === '') {
+                    return back()
+                        ->withErrors([
+                            'luaran' => 'Tautan bukti untuk luaran "' . ($pl->luaranMaster->nama ?? 'yang dipilih')
+                                . '" wajib diisi sebelum laporan dikirim.',
+                        ])
+                        ->withInput();
+                }
             }
         }
 
+        // Semua luaran yang direncanakan di proposal dianggap tercapai — simpan
+        // entri untuk setiap luaran (link boleh kosong saat masih draft).
+        $luaranTercapai = [];
+        foreach ($pengajuan->luaran as $pl) {
+            $link = trim($request->input("luaran.{$pl->id}.link", ''));
+            $luaranTercapai[$pl->id] = ['link' => $link];
+        }
+
         // Luaran tambahan di luar rencana awal proposal — hanya baris yang
-        // judul luaran-nya dipilih DAN link-nya diisi yang disimpan.
+        // link-nya diisi yang disimpan. Ada 2 bentuk baris yang valid:
+        // 1) Pilih dari daftar $luaranMasterLain -> simpan luaran_master_id (int)
+        // 2) Pilih "Lainnya" lalu ketik manual  -> simpan nama_custom (string),
+        //    luaran_master_id disimpan null karena memang bukan ID asli.
         $luaranTambahanLain = [];
         foreach ($request->input('luaran_lain', []) as $item) {
             $masterId = $item['luaran_master_id'] ?? null;
+            $namaCustom = trim($item['nama_custom'] ?? '');
             $link = trim($item['link'] ?? '');
-            if ($masterId && $link !== '') {
+
+            if ($link === '') {
+                continue; // baris kosong / belum diisi, lewati
+            }
+
+            if ($masterId === 'lainnya') {
+                if ($namaCustom === '') {
+                    continue; // judul manual belum diisi, lewati (harusnya sudah kena validasi di atas kalau action=kirim)
+                }
+                $luaranTambahanLain[] = [
+                    'luaran_master_id' => null,
+                    'nama_custom' => $namaCustom,
+                    'link' => $link,
+                ];
+            } elseif (!empty($masterId)) {
                 $luaranTambahanLain[] = [
                     'luaran_master_id' => (int) $masterId,
+                    'nama_custom' => null,
                     'link' => $link,
                 ];
             }
         }
 
+        // Semua luaran rencana dianggap tercapai (100%) begitu laporan dikirim.
         $totalLuaran = $pengajuan->luaran()->count();
-        $persentaseOtomatis = $totalLuaran > 0 ? (int) round(count($luaranTercapai) / $totalLuaran * 100) : 0;
+        $persentaseOtomatis = $totalLuaran > 0 ? 100 : 0;
 
         $laporan = LaporanHasil::firstOrNew(['pengajuan_id' => $pengajuan->id]);
         $laporan->pengajuan_id = $pengajuan->id;

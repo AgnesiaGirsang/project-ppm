@@ -183,12 +183,20 @@
 
                     <div class="space-y-3 pt-1">
                         @foreach ($selected->luaran_tambahan_lain as $item)
-                            @php $lm = \App\Models\LuaranMaster::find($item['luaran_master_id'] ?? null); @endphp
-                            <div class="p-3.5 bg-amber-50/40 rounded-xl border border-amber-200/70 space-y-2.5">
-                                <div class="flex items-center justify-between gap-3">
-                                    <span
-                                        class="font-bold text-slate-800 text-xs">{{ $lm->nama ?? 'Luaran tidak ditemukan' }}</span>
-                                    <span
+    @php
+        // Entri manual (input "Lainnya") menyimpan nama langsung di nama_custom
+        // dan luaran_master_id-nya null — jadi cek nama_custom dulu sebelum
+        // query ke LuaranMaster, biar tidak selalu jatuh ke "Luaran tidak ditemukan".
+        $namaLuaran = $item['nama_custom'] ?? null;
+        if (!$namaLuaran && !empty($item['luaran_master_id'])) {
+            $lm = \App\Models\LuaranMaster::find($item['luaran_master_id']);
+            $namaLuaran = $lm->nama ?? null;
+        }
+    @endphp
+    <div class="p-3.5 bg-amber-50/40 rounded-xl border border-amber-200/70 space-y-2.5">
+        <div class="flex items-center justify-between gap-3">
+            <span
+                class="font-bold text-slate-800 text-xs">{{ $namaLuaran ?? 'Luaran tidak ditemukan' }}</span>
                                         class="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-700 uppercase">
                                         Tambahan Dosen</span>
                                 </div>

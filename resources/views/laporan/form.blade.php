@@ -80,7 +80,24 @@
 
         .luaran-lain-row select,
         .luaran-lain-row input[type="text"] {
+            width: 100%;
+        }
+
+        .luaran-lain-pilihan {
             flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            min-width: 0;
+        }
+
+        .luaran-lain-link {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .luaran-lain-custom {
+            display: none;
         }
 
         .luaran-lain-empty {
@@ -427,10 +444,12 @@
                 @php $existing = ($laporan->luaran_tercapai ?? [])[$pl->id] ?? null; @endphp
                 <div class="luaran-item">
                     <div class="hd">
-                        <input type="checkbox" id="chk{{ $pl->id }}" disabled
-                            {{ $existing && !empty($existing['link']) ? 'checked' : '' }}>
-                        <span class="check-visual {{ $existing && !empty($existing['link']) ? 'is-checked' : '' }}"
-                            id="checkVisual{{ $pl->id }}"></span>
+                        {{-- Checkbox ini SELALU tercentang (bukan lagi mengikuti isi link) karena
+                             luaran ini memang sudah dipilih/direncanakan sejak pengajuan proposal.
+                             Status "tercapai secara faktual" tetap dinilai lewat link bukti di
+                             bawah, bukan lewat checkbox ini. --}}
+                        <input type="checkbox" id="chk{{ $pl->id }}" disabled checked>
+                        <span class="check-visual is-checked" id="checkVisual{{ $pl->id }}"></span>
                         <b>{{ $pl->luaranMaster->nama ?? '-' }}</b>
                         @if ($pl->is_wajib)
                             <span class="tag-wajib">WAJIB</span>
@@ -441,7 +460,7 @@
                     <input type="text" form="formHasil" name="luaran[{{ $pl->id }}][link]"
                         id="linkLuaran{{ $pl->id }}" placeholder="Link / nama file bukti luaran"
                         value="{{ $existing['link'] ?? '' }}" {{ $readonly ?? false ? 'disabled' : '' }}
-                        oninput="const isFilled = this.value.trim().length > 0; document.getElementById('chk{{ $pl->id }}').checked = isFilled; document.getElementById('checkVisual{{ $pl->id }}').classList.toggle('is-checked', isFilled); updateKemajuanLuaran();">
+                        oninput="updateKemajuanLuaran();">
                 </div>
             @empty
                 <div class="sub">Tidak ada luaran yang direncanakan pada pengajuan ini.</div>
@@ -477,7 +496,8 @@
                 <label>Luaran Lainnya <span class="tag-opsional">OPSIONAL</span></label>
                 <div class="sub" style="margin-bottom:10px;">
                     Luaran yang tercapai di lapangan tapi tidak direncanakan/dipilih saat pengajuan proposal bisa
-                    ditambahkan di sini. Pilih judul luaran dari daftar, lalu isi tautan buktinya.
+                    ditambahkan di sini. Pilih judul luaran dari daftar, atau pilih "Lainnya" untuk menulis judul
+                    luaran sendiri, lalu isi tautan buktinya.
                 </div>
 
                 <div id="luaranLainContainer"></div>
@@ -485,12 +505,8 @@
                     ditambahkan.</div>
 
                 @unless ($readonly ?? false)
-                    @if ($luaranMasterLain->isEmpty())
-                        <div class="sub">Semua luaran yang tersedia sudah dipilih saat pengajuan proposal.</div>
-                    @else
-                        <button type="button" class="btn btn-outline btn-sm" onclick="tambahLuaranLain()">+ Tambah
-                            Luaran</button>
-                    @endif
+                    <button type="button" class="btn btn-outline btn-sm" onclick="tambahLuaranLain()">+ Tambah
+                        Luaran</button>
                 @endunless
             </div>
 
@@ -503,17 +519,25 @@
         </div>
     </div>
 
-    {{-- Template baris "Luaran Lainnya" — di-clone lewat JS setiap kali baris baru ditambahkan --}}
+    {{-- Template baris "Luaran Lainnya" — di-clone lewat JS setiap kali baris baru ditambahkan.
+         Sekarang ada 2 mode: pilih dari daftar $luaranMasterLain, ATAU pilih opsi
+         "Lainnya (input manual)" yang memunculkan textbox judul bebas. --}}
     <template id="templateLuaranLain">
         <div class="luaran-lain-row">
-            <select form="formHasil" name="luaran_lain[__INDEX__][luaran_master_id]"
-                {{ $readonly ?? false ? 'disabled' : '' }}>
-                <option value="">Pilih judul luaran...</option>
-                @foreach ($luaranMasterLain as $lm)
-                    <option value="{{ $lm->id }}">{{ $lm->nama }}</option>
-                @endforeach
-            </select>
-            <input type="text" form="formHasil" name="luaran_lain[__INDEX__][link]"
+            <div class="luaran-lain-pilihan">
+                <select form="formHasil" name="luaran_lain[__INDEX__][luaran_master_id]" class="luaran-lain-select"
+                    {{ $readonly ?? false ? 'disabled' : '' }}>
+                    <option value="">Pilih judul luaran...</option>
+                    @foreach ($luaranMasterLain as $lm)
+                        <option value="{{ $lm->id }}">{{ $lm->nama }}</option>
+                    @endforeach
+                    <option value="lainnya">+ Lainnya (input manual)</option>
+                </select>
+                <input type="text" form="formHasil" name="luaran_lain[__INDEX__][nama_custom]"
+                    class="luaran-lain-custom" placeholder="Tulis judul luaran secara manual..."
+                    {{ $readonly ?? false ? 'disabled' : '' }}>
+            </div>
+            <input type="text" form="formHasil" name="luaran_lain[__INDEX__][link]" class="luaran-lain-link"
                 placeholder="Link / nama file bukti luaran" {{ $readonly ?? false ? 'disabled' : '' }}>
             @unless ($readonly ?? false)
                 <button type="button" class="btn btn-danger btn-sm" onclick="this.closest('.luaran-lain-row').remove()">
@@ -549,19 +573,21 @@
             }
         }
 
+        // Progress "Kemajuan Luaran" dihitung dari LINK yang benar-benar sudah diisi
+        // (checkbox di atas selalu tercentang sejak awal sebagai penanda "direncanakan").
         function updateKemajuanLuaran() {
-            const checkboxes = document.querySelectorAll('.luaran-item input[type="checkbox"]');
-            const total = checkboxes.length;
-            let tercapai = 0;
-            checkboxes.forEach(chk => {
-                if (chk.checked) tercapai++;
+            const linkInputs = document.querySelectorAll('.luaran-item input[type="text"][id^="linkLuaran"]');
+            const total = linkInputs.length;
+            let terisi = 0;
+            linkInputs.forEach(inp => {
+                if (inp.value.trim().length > 0) terisi++;
             });
 
-            const persen = total > 0 ? Math.round((tercapai / total) * 100) : 0;
+            const persen = total > 0 ? Math.round((terisi / total) * 100) : 0;
 
             document.getElementById('progressBarLuaran').style.width = persen + '%';
             document.getElementById('progressTextLuaran').textContent =
-                tercapai + ' dari ' + total + ' luaran terpenuhi (' + persen + '%)';
+                terisi + ' dari ' + total + ' luaran terpenuhi (' + persen + '%)';
         }
 
         // Hitung sekali saat halaman dimuat, supaya kalau ada link yang sudah terisi
@@ -571,23 +597,61 @@
         // ===== Luaran Lainnya =====
         let luaranLainIndex = 0;
 
-        function tambahLuaranLain(selectedId = '', linkVal = '') {
+        function tambahLuaranLain(selectedId = '', linkVal = '', customNama = '') {
             const tplHtml = document.getElementById('templateLuaranLain').innerHTML.replaceAll('__INDEX__',
                 luaranLainIndex);
             const wrapper = document.createElement('div');
             wrapper.innerHTML = tplHtml.trim();
             const row = wrapper.firstElementChild;
 
-            if (selectedId) row.querySelector('select').value = selectedId;
-            if (linkVal) row.querySelector('input[type="text"]').value = linkVal;
+            const select = row.querySelector('.luaran-lain-select');
+            const customInput = row.querySelector('.luaran-lain-custom');
+            const linkInput = row.querySelector('.luaran-lain-link');
+
+            // Kalau data lama punya nama_custom (dulu pernah diisi manual),
+            // langsung set dropdown ke "Lainnya" dan tampilkan textbox-nya terisi.
+            if (customNama) {
+                select.value = 'lainnya';
+                customInput.style.display = 'block';
+                customInput.required = true;
+                customInput.value = customNama;
+            } else if (selectedId) {
+                select.value = selectedId;
+            }
+
+            if (linkVal) linkInput.value = linkVal;
 
             document.getElementById('luaranLainContainer').appendChild(row);
             luaranLainIndex++;
         }
 
+        // Toggle textbox manual setiap kali pilihan dropdown "Luaran Lainnya" diubah.
+        // Pakai event delegation di container supaya tetap jalan untuk baris
+        // yang ditambahkan belakangan lewat JS (bukan cuma yang ada saat load).
+        document.getElementById('luaranLainContainer').addEventListener('change', function(e) {
+            if (!e.target.classList.contains('luaran-lain-select')) return;
+
+            const row = e.target.closest('.luaran-lain-row');
+            const customInput = row.querySelector('.luaran-lain-custom');
+
+            if (e.target.value === 'lainnya') {
+                customInput.style.display = 'block';
+                customInput.required = true;
+                customInput.focus();
+            } else {
+                customInput.style.display = 'none';
+                customInput.required = false;
+                customInput.value = '';
+            }
+        });
+
         document.addEventListener('DOMContentLoaded', function() {
             const existing = @json($laporan->luaran_tambahan_lain ?? []);
-            existing.forEach(item => tambahLuaranLain(item.luaran_master_id, item.link));
+            existing.forEach(item => tambahLuaranLain(
+                item.luaran_master_id ?? '',
+                item.link ?? '',
+                item.nama_custom ?? ''
+            ));
         });
     </script>
 @endsection
