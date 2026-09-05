@@ -8,20 +8,20 @@ class Pengajuan extends Model
 {
     protected $table = 'pengajuan';
 
-protected $fillable = [
-    'kode', 'pegawai_id', 'jenis', 'jalur', 'skema_id', 'rumpun_ilmu_id',
-    'judul', 'tahun_anggaran', 'tahun_pengajuan', 'tahun_pelaksanaan', 'tahun_capaian',
-    'proposal_path', 'proposal_nama_asli', 'proposal_size',
-    'kontrak_path', 'kontrak_nama_asli', 'kontrak_size',
-    'rab_path', 'rab_nama_asli', 'rab_size',
-    'total_biaya', 'inovasi_produk', 'tahap', 'status', 'catatan_validator',
-    'divalidasi_oleh', 'divalidasi_pada',
-];
+    protected $fillable = [
+        'kode', 'pegawai_id', 'jenis', 'jalur', 'skema_id', 'rumpun_ilmu_id',
+        'judul', 'tahun_anggaran', 'tahun_pengajuan', 'tahun_pelaksanaan', 'tahun_capaian',
+        'proposal_path', 'proposal_nama_asli', 'proposal_size',
+        'kontrak_path', 'kontrak_nama_asli', 'kontrak_size',
+        'rab_path', 'rab_nama_asli', 'rab_size',
+        'total_biaya', 'inovasi_produk', 'tahap', 'status', 'catatan_validator',
+        'divalidasi_oleh', 'divalidasi_pada',
+    ];
 
     protected function casts(): array
     {
         return [
-            'total_biaya' => 'decimal:2',
+            'total_biaya'     => 'decimal:2',
             'divalidasi_pada' => 'datetime',
         ];
     }
@@ -48,9 +48,7 @@ protected $fillable = [
         return $this->hasMany(PengajuanTim::class);
     }
 
-    // Alias 'anggotas' agar cocok dengan pemanggilan with(['anggotas']) di controller.
-    // Difilter khusus peran 'anggota' supaya ketua tidak ikut ter-loop sebagai
-    // anggota di halaman-halaman yang memakai relasi ini (mis. Validasi Proposal admin).
+    // Alias 'anggotas' — hanya peran 'anggota' supaya ketua tidak ikut ter-loop
     public function anggotas()
     {
         return $this->hasMany(PengajuanTim::class, 'pengajuan_id')->where('peran', 'anggota');
@@ -76,18 +74,25 @@ protected $fillable = [
         return $this->hasOne(LaporanHasil::class);
     }
 
-    // Admin yang melakukan validasi terakhir (gate dari akun yang login saat Kirim Keputusan)
+    // Admin yang melakukan validasi TERAKHIR (masih dipakai untuk kompatibilitas)
     public function validator()
     {
         return $this->belongsTo(\App\Models\Pegawai::class, 'divalidasi_oleh');
     }
 
-    // Label status buat ditampilin di badge (samain sama prototype)
+    // ======================================================================
+    // SEMUA riwayat validasi proposal ini (tidak pernah ditimpa), terbaru dulu
+    // ======================================================================
+    public function riwayatValidasi()
+    {
+        return $this->morphMany(RiwayatValidasi::class, 'validatable')
+            ->latest('dilakukan_pada')
+            ->latest('id');
+    }
+
+    // Label status buat ditampilin di badge
     public function statusLabel(): array
     {
-        // Kalau pengajuan sudah masuk tahap Laporan Kemajuan/Hasil, status yang
-        // relevan adalah status laporan di tahap itu — bukan status validasi
-        // proposal lama, yang tetap 'disetujui' selamanya sejak proposal lolos.
         if ($this->tahap === 'laporan_kemajuan') {
             return $this->laporanStatusLabel($this->laporanKemajuan?->status);
         }
@@ -97,21 +102,21 @@ protected $fillable = [
         }
 
         return match ($this->status) {
-            'proses' => ['Dalam Proses', 'b-menunggu'],
+            'proses'    => ['Dalam Proses', 'b-menunggu'],
             'disetujui' => ['Disetujui', 'b-disetujui'],
-            'revisi' => ['Direvisi', 'b-revisi'],
-            default => [$this->status, 'b-menunggu'],
+            'revisi'    => ['Direvisi', 'b-revisi'],
+            default     => [$this->status, 'b-menunggu'],
         };
     }
 
     private function laporanStatusLabel(?string $status): array
     {
         return match ($status) {
-            'draft' => ['Draft', 'b-menunggu'],
-            'proses' => ['Sedang Diproses', 'b-menunggu'],
+            'draft'     => ['Draft', 'b-menunggu'],
+            'proses'    => ['Sedang Diproses', 'b-menunggu'],
             'disetujui' => ['Disetujui', 'b-disetujui'],
-            'revisi' => ['Direvisi', 'b-revisi'],
-            default => ['Dalam Proses', 'b-menunggu'],
+            'revisi'    => ['Direvisi', 'b-revisi'],
+            default     => ['Dalam Proses', 'b-menunggu'],
         };
     }
 }

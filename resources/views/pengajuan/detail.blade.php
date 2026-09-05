@@ -22,6 +22,19 @@
             <div class="alert-box alert-amber">⚠️ <b>Catatan revisi dari admin:</b><br>{{ $p->catatan_validator }}</div>
         @endif
 
+        {{-- ===================== LACAK STATUS VALIDASI (Proposal → Kemajuan → Hasil) ===================== --}}
+        <div style="margin:18px 0 22px;">
+            @include('partials.timeline-validasi', [
+                'sumber' => [
+                    ['objek' => $p,                  'tahap' => 'proposal'],
+                    ['objek' => $p->laporanKemajuan, 'tahap' => 'laporan_kemajuan'],
+                    ['objek' => $p->laporanHasil,    'tahap' => 'laporan_hasil'],
+                ],
+                'judul' => 'Lacak Status Validasi',
+                'batas' => 4,
+            ])
+        </div>
+
         <div class="review-section">
             <h4>Informasi Umum</h4>
             <div class="review-row"><span class="k">Jenis</span><span class="v">{{ ucfirst($p->jenis) }}</span>

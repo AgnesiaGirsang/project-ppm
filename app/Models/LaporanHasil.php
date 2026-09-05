@@ -18,10 +18,10 @@ class LaporanHasil extends Model
     ];
 
     protected $casts = [
-        'luaran_tercapai' => 'array',
+        'luaran_tercapai'      => 'array',
         'luaran_tambahan_lain' => 'array',
-        'dokumentasi' => 'array',
-        'divalidasi_pada' => 'datetime',
+        'dokumentasi'          => 'array',
+        'divalidasi_pada'      => 'datetime',
     ];
 
     public function pengajuan()
@@ -29,19 +29,28 @@ class LaporanHasil extends Model
         return $this->belongsTo(Pengajuan::class);
     }
 
+    // Admin yang melakukan validasi TERAKHIR
     public function validator()
     {
         return $this->belongsTo(Pegawai::class, 'divalidasi_oleh');
     }
 
+    // SEMUA riwayat validasi laporan hasil ini, terbaru dulu
+    public function riwayatValidasi()
+    {
+        return $this->morphMany(RiwayatValidasi::class, 'validatable')
+            ->latest('dilakukan_pada')
+            ->latest('id');
+    }
+
     public function statusLabel(): array
     {
         return match ($this->status) {
-            'draft' => ['Draft', 'b-menunggu'],
-            'proses' => ['Dalam Proses', 'b-menunggu'],
+            'draft'     => ['Draft', 'b-menunggu'],
+            'proses'    => ['Dalam Proses', 'b-menunggu'],
             'disetujui' => ['Disetujui', 'b-disetujui'],
-            'revisi' => ['Direvisi', 'b-revisi'],
-            default => [$this->status, 'b-menunggu'],
+            'revisi'    => ['Direvisi', 'b-revisi'],
+            default     => [$this->status, 'b-menunggu'],
         };
     }
 }

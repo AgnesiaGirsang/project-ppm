@@ -18,7 +18,7 @@ class LaporanKemajuan extends Model
     protected function casts(): array
     {
         return [
-            'dokumentasi' => 'array',
+            'dokumentasi'     => 'array',
             'luaran_tercapai' => 'array',
             'divalidasi_pada' => 'datetime',
         ];
@@ -29,20 +29,28 @@ class LaporanKemajuan extends Model
         return $this->belongsTo(Pengajuan::class);
     }
 
-    // Admin yang melakukan validasi terakhir (gate dari akun yang login saat Kirim Keputusan)
+    // Admin yang melakukan validasi TERAKHIR
     public function validator()
     {
         return $this->belongsTo(\App\Models\Pegawai::class, 'divalidasi_oleh');
     }
 
+    // SEMUA riwayat validasi laporan kemajuan ini, terbaru dulu
+    public function riwayatValidasi()
+    {
+        return $this->morphMany(RiwayatValidasi::class, 'validatable')
+            ->latest('dilakukan_pada')
+            ->latest('id');
+    }
+
     public function statusLabel(): array
     {
         return match ($this->status) {
-            'draft' => ['Draft', 'b-menunggu'],
-            'proses' => ['Menunggu Validasi', 'b-menunggu'],
+            'draft'     => ['Draft', 'b-menunggu'],
+            'proses'    => ['Menunggu Validasi', 'b-menunggu'],
             'disetujui' => ['Disetujui', 'b-disetujui'],
-            'revisi' => ['Perlu Direvisi', 'b-revisi'],
-            default => [$this->status, 'b-menunggu'],
+            'revisi'    => ['Perlu Direvisi', 'b-revisi'],
+            default     => [$this->status, 'b-menunggu'],
         };
     }
 }

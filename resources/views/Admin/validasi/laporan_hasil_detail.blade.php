@@ -423,33 +423,11 @@
                 </div>
             </form>
 
-            {{-- ===================== RIWAYAT VALIDASI ===================== --}}
-            @if ($selected->divalidasi_oleh)
-                <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-6 space-y-3 text-xs">
-                    <h3
-                        class="font-extrabold text-slate-900 text-sm uppercase tracking-wide border-b border-slate-100 pb-3 flex items-center gap-2">
-                        <i class="fa-solid fa-clock-rotate-left text-emerald-600"></i> Riwayat Validasi
-                    </h3>
-                    <div class="flex items-center gap-3 p-3.5 bg-slate-50/70 rounded-xl border border-slate-100">
-                        <div
-                            class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center font-extrabold text-sm shrink-0">
-                            {{ strtoupper(substr($selected->validator->nama ?? '?', 0, 1)) }}
-                        </div>
-                        <div class="min-w-0">
-                            <p class="font-bold text-slate-900 text-xs truncate">
-                                {{ $selected->validator->nama ?? 'Admin (akun dihapus)' }}
-                            </p>
-                            <p class="text-[11px] text-slate-500 mt-0.5">
-                                {{ $selected->status === 'disetujui' ? 'Menyetujui laporan hasil ini' : 'Meminta revisi laporan hasil ini' }}
-                            </p>
-                            <p class="text-[11px] text-slate-400 mt-0.5">
-                                <i class="fa-regular fa-clock text-[10px]"></i>
-                                {{ $selected->divalidasi_pada ? $selected->divalidasi_pada->format('d F Y, H:i') . ' WIB' : '-' }}
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            @endif
+                            {{-- ===================== RIWAYAT VALIDASI (TRACKING, TIDAK PERNAH DITIMPA) ===================== --}}
+                @include('partials.timeline-validasi', [
+                    'sumber' => [['objek' => $selected, 'tahap' => 'laporan_hasil']],
+                    'judul'  => 'Riwayat Validasi Laporan Hasil',
+                ])
         </div>
     </div>
 

@@ -1,4 +1,4 @@
-<?php
+ <?php
 
 use App\Http\Controllers\Auth\AdminAuthController;
 use App\Http\Controllers\BerkasController;
@@ -691,3 +691,4 @@ Route::middleware(['auth', 'role:admin'])
         [NotificationController::class, 'markAsRead']
     )->name('notifikasi.read');
 });
+

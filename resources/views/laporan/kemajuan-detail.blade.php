@@ -16,6 +16,14 @@
         @endif
     </div>
 
+    {{-- ===================== LACAK STATUS VALIDASI LAPORAN KEMAJUAN ===================== --}}
+    <div style="margin-bottom:16px;">
+        @include('partials.timeline-validasi', [
+            'sumber' => [['objek' => $laporan, 'tahap' => 'laporan_kemajuan']],
+            'judul'  => 'Lacak Status Validasi Laporan Kemajuan',
+        ])
+    </div>
+
     <div class="grid g12" style="align-items:start; grid-template-columns: 1.1fr 1fr; gap:16px;">
         <div class="card">
             <h3>Laporan Kemajuan</h3>
@@ -60,7 +68,7 @@
                 <label>Dokumentasi Kegiatan</label>
                 @if (!empty($laporan->dokumentasi))
                     @foreach ($laporan->dokumentasi as $dok)
-                        <div class="file-chip" style="margin-bottom:6px;">🖼 {{ $dok['nama'] ?? 'Dokumentasi' }}</div>
+                        <div class="file-chip" style="margin-bottom:6px;">🖼️ {{ $dok['nama'] ?? 'Dokumentasi' }}</div>
                     @endforeach
                 @else
                     <div style="color:var(--ink-500); font-size:12.5px;">Tidak ada dokumentasi.</div>
